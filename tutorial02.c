@@ -8,9 +8,11 @@
 // Up to 16 attributes per vertex is allowed so any value between 0 and 15 will do.
 const int POSITION_ATTRIBUTE_INDEX = 12;
 
+int windowId; // the glut window id
+
 bool initialized = false;
-int windowId;
 GLuint triangleId;
+GLuint quadId;
 GLuint programId;
 
 const GLchar* vertexShaderSource =
@@ -53,7 +55,6 @@ void createProgram() {
     glLinkProgram(programId);
 }
 
-
 void createTriangle() {
     float positions[] = {
             0.0f, 0.0f, 0.0f,
@@ -65,11 +66,33 @@ void createTriangle() {
     glBufferData(GL_ARRAY_BUFFER, sizeof(positions), positions, GL_STATIC_DRAW);
 }
 
+void createQuad() {
+    float positions[] = {
+            0.0f, 0.0f, 0.0f,
+            -1.0f, 0.0f, 0.0f,
+            0.0f, -1.0f, 0.0f,
+            0.0f, -1.0f, 0.0f,
+            -1.0f, -1.0f, 0.0f,
+            -1.0f, 0.0f, 0.0f
+    };
+    glGenBuffers(1, &quadId);
+    glBindBuffer(GL_ARRAY_BUFFER, quadId);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(positions), positions, GL_STATIC_DRAW);
+}
+
 void renderTriangle() {
     glEnableVertexAttribArray(POSITION_ATTRIBUTE_INDEX);
     glBindBuffer(GL_ARRAY_BUFFER, triangleId);
     glVertexAttribPointer(POSITION_ATTRIBUTE_INDEX, 3, GL_FLOAT, GL_FALSE, 0, 0);
     glDrawArrays(GL_TRIANGLES, 0, 3);
+    glDisableVertexAttribArray(POSITION_ATTRIBUTE_INDEX);
+}
+
+void renderQuad() {
+    glEnableVertexAttribArray(POSITION_ATTRIBUTE_INDEX);
+    glBindBuffer(GL_ARRAY_BUFFER, quadId);
+    glVertexAttribPointer(POSITION_ATTRIBUTE_INDEX, 3, GL_FLOAT, GL_FALSE, 0, 0);
+    glDrawArrays(GL_TRIANGLES, 0, 6);
     glDisableVertexAttribArray(POSITION_ATTRIBUTE_INDEX);
 }
 
@@ -82,12 +105,14 @@ void displayFunc() {
     if (initialized == false) {
         createProgram();
         createTriangle();
+        createQuad();
         initialized = true;
     }
 
     glClear(GL_COLOR_BUFFER_BIT);
     glUseProgram(programId);
     renderTriangle();
+    renderQuad();
     glutSwapBuffers();
 }
 
@@ -105,7 +130,7 @@ int main(int argc, char **argv) {
     glutInitWindowSize(800, 600);
     glutInitWindowPosition(0, 0);
     windowId = glutCreateWindow("Tutorial 02");
-    glewInit(); // must be called after the opengl context has been created
+    glewInit(); // must be called AFTER the OpenGL context has been created
     glutDisplayFunc(&displayFunc);
     glutIdleFunc(&displayFunc);
     glutReshapeFunc(&reshapeFunc);
