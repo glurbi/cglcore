@@ -8,12 +8,12 @@
 // Up to 16 attributes per vertex is allowed so any value between 0 and 15 will do.
 const int POSITION_ATTRIBUTE_INDEX = 12;
 
-int initialized = false;
+bool initialized = false;
 int windowId;
 GLuint triangleId;
 GLuint programId;
 
-GLchar* vertexShaderSource =
+const GLchar* vertexShaderSource =
 "#version 330\n"\
 
 "in vec3 inPosition;\n"\
@@ -23,7 +23,7 @@ GLchar* vertexShaderSource =
 "    gl_Position = vec4(inPosition, 1.0f);\n"\
 "}\n";
 
-GLchar* fragmentShaderSource =
+const GLchar* fragmentShaderSource =
 "#version 330\n"\
 
 "out vec4 outColor;\n"\
@@ -36,12 +36,12 @@ GLchar* fragmentShaderSource =
 void createProgram() {
     int vertexShaderSourceLength = strlen(vertexShaderSource);
     GLuint vertexShaderId = glCreateShader(GL_VERTEX_SHADER);
-    glShaderSource(vertexShaderId, 1, (const GLchar**)&vertexShaderSource, &vertexShaderSourceLength);
+    glShaderSource(vertexShaderId, 1, &vertexShaderSource, &vertexShaderSourceLength);
     glCompileShader(vertexShaderId);
 
     int fragmentShaderSourceLength = strlen(fragmentShaderSource);
     GLuint fragmentShaderId = glCreateShader(GL_FRAGMENT_SHADER);
-    glShaderSource(fragmentShaderId, 1, (const GLchar**)&fragmentShaderSource, &fragmentShaderSourceLength);
+    glShaderSource(fragmentShaderId, 1, &fragmentShaderSource, &fragmentShaderSourceLength);
     glCompileShader(fragmentShaderId);
 
     programId = glCreateProgram();
