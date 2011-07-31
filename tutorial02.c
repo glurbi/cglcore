@@ -19,20 +19,23 @@ const GLchar* vertexShaderSource =
 "#version 330\n"\
 
 "in vec3 inPosition;\n"\
+"out vec3 color;\n"\
 
 "void main(void)\n"\
 "{\n"\
 "    gl_Position = vec4(inPosition, 1.0f);\n"\
+"    color = inPosition;\n"\
 "}\n";
 
 const GLchar* fragmentShaderSource =
 "#version 330\n"\
 
+"in vec3 color;\n"\
 "out vec4 outColor;\n"\
 
 "void main(void)\n"\
 "{\n"\
-"    outColor = vec4(1.0f, 0.0f, 1.0f, 1.0f);\n"\
+"    outColor = vec4(abs(color.xy), (1.0f-abs(color.x)), 1.0f);\n"\
 "}\n";
 
 void createProgram() {
