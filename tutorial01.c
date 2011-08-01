@@ -70,7 +70,7 @@ int main(int argc, char **argv) {
     glutInitDisplayMode(GLUT_RGBA | GLUT_DOUBLE | GLUT_ALPHA | GLUT_DEPTH);
     glutInitWindowSize(800, 600);
     glutInitWindowPosition(0, 0);
-    windowId = glutCreateWindow("Tutorial 02");
+    windowId = glutCreateWindow("Tutorial 01");
     glewInit(); // must be called AFTER the OpenGL context has been created
     glutDisplayFunc(&displayFunc);
     glutIdleFunc(&displayFunc);
