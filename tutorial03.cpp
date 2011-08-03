@@ -12,10 +12,10 @@
 const int POSITION_ATTRIBUTE_INDEX = 0;
 
 // defines the orthographic projection volume
-const float left = -2.0f;
-const float right = 2.0f;
-const float bottom = -2.0f;
-const float top = 2.0f;
+const float left = -1.5f;
+const float right = 1.5f;
+const float bottom = -1.5f;
+const float top = 1.5f;
 const float nearPlane = 1.0f;
 const float farPlane = -1.0f;
 
@@ -53,9 +53,9 @@ void createProgram() {
 
 void createTriangle() {
     float positions[] = {
-            0.0f, 0.0f, 0.0f,
-            1.0f, 0.0f, 0.0f,
-            0.0f, 1.0f, 0.0f
+            -0.5f, -0.5f, 0.0f,
+            1.0f, -0.5f, 0.0f,
+            -0.5f, 1.0f, 0.0f
     };
     glGenBuffers(1, &triangleId);
     glBindBuffer(GL_ARRAY_BUFFER, triangleId);
@@ -64,12 +64,12 @@ void createTriangle() {
 
 void createQuad() {
     float positions[] = {
-            0.0f, 0.0f, 0.0f,
-            -1.0f, 0.0f, 0.0f,
-            0.0f, -1.0f, 0.0f,
-            0.0f, -1.0f, 0.0f,
+            0.5f, 0.5f, 0.0f,
+            -1.0f, 0.5f, 0.0f,
+            0.5f, -1.0f, 0.0f,
+            0.5f, -1.0f, 0.0f,
             -1.0f, -1.0f, 0.0f,
-            -1.0f, 0.0f, 0.0f
+            -1.0f, 0.5f, 0.0f
     };
     glGenBuffers(1, &quadId);
     glBindBuffer(GL_ARRAY_BUFFER, quadId);
@@ -107,6 +107,8 @@ void displayFunc() {
         initialized = true;
     }
 
+	glEnable (GL_BLEND);
+	glBlendFunc (GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
     glClear(GL_COLOR_BUFFER_BIT);
     glUseProgram(programId);
 
@@ -117,12 +119,17 @@ void displayFunc() {
     GLuint matrixUniform = glGetUniformLocation(programId, "mvpMatrix");
     glUniformMatrix4fv(matrixUniform, 1, false, mvp);
 
-    // set the uniform for the global geometry color
+	// we need the location of the uniform in order to set its value
     GLuint color = glGetUniformLocation(programId, "color");
-    glUniform4f(color, 0.0f, 1.0f, 0.0f, 1.0f);
 
+	// render the triangle in yellow
+    glUniform4f(color, 1.0f, 1.0f, 0.0f, 0.7f);
     renderTriangle();
+
+	// render the quad in blue
+    glUniform4f(color, 0.2f, 0.2f, 1.0f, 0.7f);
     renderQuad();
+
     glutSwapBuffers();
 }
 
