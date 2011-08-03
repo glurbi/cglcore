@@ -1,7 +1,6 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
-#include <stdbool.h>
 #include <GL/glew.h>
 #include <GL/freeglut.h>
 
@@ -9,8 +8,7 @@
 const int POSITION_ATTRIBUTE_INDEX = 0;
 
 int windowId; // the glut window id
-
-bool initialized = false;
+bool initialized;
 GLuint triangleId;
 
 void createTriangles() {
@@ -63,6 +61,7 @@ void keyboardFunc(unsigned char key, int x, int y) {
 }
 
 int main(int argc, char **argv) {
+	initialized = false;
     glutInit(&argc, argv);
     glutInitContextVersion(3, 3);
     glutInitContextFlags(GLUT_FORWARD_COMPATIBLE);

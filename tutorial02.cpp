@@ -1,23 +1,11 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
-#include <stdbool.h>
 #include <GL/glew.h>
 #include <GL/freeglut.h>
 
-#include <matrices.h>
-#include <files.h>
-
 // Up to 16 attributes per vertex is allowed so any value between 0 and 15 will do.
-const int POSITION_ATTRIBUTE_INDEX = 0;
-
-// defines the orthographic projection volume
-const float left = -2.0f;
-const float right = 2.0f;
-const float bottom = -2.0f;
-const float top = 2.0f;
-const float near = 1.0f;
-const float far = -1.0f;
+const int POSITION_ATTRIBUTE_INDEX = 12;
 
 int windowId; // the glut window id
 
@@ -25,16 +13,36 @@ bool initialized = false;
 GLuint triangleId;
 GLuint quadId;
 GLuint programId;
-float aspectRatio;
+
+const GLchar* vertexShaderSource =
+"#version 330\n"\
+
+"in vec3 inPosition;\n"\
+"out vec3 color;\n"\
+
+"void main(void)\n"\
+"{\n"\
+"    gl_Position = vec4(inPosition, 1.0f);\n"\
+"    color = inPosition;\n"\
+"}\n";
+
+const GLchar* fragmentShaderSource =
+"#version 330\n"\
+
+"in vec3 color;\n"\
+"out vec4 outColor;\n"\
+
+"void main(void)\n"\
+"{\n"\
+"    outColor = vec4(abs(color.xy), (1.0f-abs(color.x)), 1.0f);\n"\
+"}\n";
 
 void createProgram() {
-    const GLchar* vertexShaderSource = readFile("tutorial03.vert");
     int vertexShaderSourceLength = strlen(vertexShaderSource);
     GLuint vertexShaderId = glCreateShader(GL_VERTEX_SHADER);
     glShaderSource(vertexShaderId, 1, &vertexShaderSource, &vertexShaderSourceLength);
     glCompileShader(vertexShaderId);
 
-    const GLchar* fragmentShaderSource = readFile("tutorial03.frag");
     int fragmentShaderSourceLength = strlen(fragmentShaderSource);
     GLuint fragmentShaderId = glCreateShader(GL_FRAGMENT_SHADER);
     glShaderSource(fragmentShaderId, 1, &fragmentShaderSource, &fragmentShaderSourceLength);
@@ -45,7 +53,7 @@ void createProgram() {
     glAttachShader(programId, fragmentShaderId);
     // associates the "inPosition" variable from the vertex shader with the position attribute
     // the variable and the attribute must be bound before the program is linked
-    glBindAttribLocation(programId, POSITION_ATTRIBUTE_INDEX, "position");
+    glBindAttribLocation(programId, POSITION_ATTRIBUTE_INDEX, "inPosition");
     glLinkProgram(programId);
 }
 
@@ -92,8 +100,6 @@ void renderQuad() {
 
 void reshapeFunc(int width, int height) {
     glViewport(0, 0, width, height);
-    // we keep track of the aspect ratio to adjust the projection volume
-    aspectRatio = 1.0f * width / height;
 }
 
 void displayFunc() {
@@ -107,18 +113,6 @@ void displayFunc() {
 
     glClear(GL_COLOR_BUFFER_BIT);
     glUseProgram(programId);
-
-    // defines the model view projection matrix and set the corresponding uniform
-    // NB: bottom and top are adjusted with the aspect ratio
-    matrice44 mvp;
-    ortho(mvp, left, right, bottom / aspectRatio, top / aspectRatio, near, far);
-    GLuint matrixUniform = glGetUniformLocation(programId, "mvpMatrix");
-    glUniformMatrix4fv(matrixUniform, 1, false, mvp);
-
-    // set the uniform for the global geometry color
-    GLuint color = glGetUniformLocation(programId, "color");
-    glUniform4f(color, 0.0f, 1.0f, 0.0f, 1.0f);
-
     renderTriangle();
     renderQuad();
     glutSwapBuffers();
@@ -137,7 +131,7 @@ int main(int argc, char **argv) {
     glutInitDisplayMode(GLUT_RGBA | GLUT_DOUBLE | GLUT_ALPHA | GLUT_DEPTH);
     glutInitWindowSize(800, 600);
     glutInitWindowPosition(0, 0);
-    windowId = glutCreateWindow("Tutorial 03");
+    windowId = glutCreateWindow("Tutorial 02");
     glewInit(); // must be called AFTER the OpenGL context has been created
     glutDisplayFunc(&displayFunc);
     glutIdleFunc(&displayFunc);
