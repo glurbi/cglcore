@@ -4,6 +4,7 @@
 #include <GL/glew.h>
 #include <GL/freeglut.h>
 
-extern void checkShaderStatus(GLuint shaderId);
+extern void checkShaderCompileStatus(GLuint shaderId);
+extern void checkProgramLinkStatus(GLuint programId);
 
 #endif

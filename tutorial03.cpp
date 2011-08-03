@@ -33,14 +33,14 @@ void createProgram() {
     GLuint vertexShaderId = glCreateShader(GL_VERTEX_SHADER);
     glShaderSource(vertexShaderId, 1, &vertexShaderSource, &vertexShaderSourceLength);
     glCompileShader(vertexShaderId);
-	checkShaderStatus(vertexShaderId);
+	checkShaderCompileStatus(vertexShaderId);
 
     const GLchar* fragmentShaderSource = readFile("tutorial03.frag");
     int fragmentShaderSourceLength = strlen(fragmentShaderSource);
     GLuint fragmentShaderId = glCreateShader(GL_FRAGMENT_SHADER);
     glShaderSource(fragmentShaderId, 1, &fragmentShaderSource, &fragmentShaderSourceLength);
     glCompileShader(fragmentShaderId);
-	checkShaderStatus(fragmentShaderId);
+	checkShaderCompileStatus(fragmentShaderId);
 
     programId = glCreateProgram();
     glAttachShader(programId, vertexShaderId);
@@ -49,6 +49,7 @@ void createProgram() {
     // the variable and the attribute must be bound before the program is linked
     glBindAttribLocation(programId, POSITION_ATTRIBUTE_INDEX, "position");
     glLinkProgram(programId);
+    checkProgramLinkStatus(programId);
 }
 
 void createTriangle() {

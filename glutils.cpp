@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <glutils.h>
 
-void checkShaderStatus(GLuint shaderId) {
+void checkShaderCompileStatus(GLuint shaderId) {
 	GLint compileStatus;
 	glGetShaderiv(shaderId, GL_COMPILE_STATUS, &compileStatus);
     if (compileStatus == GL_FALSE) {
@@ -15,3 +15,16 @@ void checkShaderStatus(GLuint shaderId) {
 	}
 }
 
+void checkProgramLinkStatus(GLuint programId) {
+    GLint linkStatus;
+    glGetProgramiv(programId, GL_LINK_STATUS, &linkStatus);
+    if (linkStatus == GL_FALSE) {
+        GLint infoLogLength;
+        glGetProgramiv(programId, GL_INFO_LOG_LENGTH, &infoLogLength);
+        printf("Program link failed...\n");
+        char* log = (char*) malloc((1+infoLogLength)*sizeof(char));
+        glGetProgramInfoLog(programId, infoLogLength, NULL, log);
+        log[infoLogLength] = 0;
+        printf("%s", log);
+    }
+}
