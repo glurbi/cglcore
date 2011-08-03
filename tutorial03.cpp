@@ -6,6 +6,7 @@
 
 #include <matrices.h>
 #include <files.h>
+#include <glutils.h>
 
 // Up to 16 attributes per vertex is allowed so any value between 0 and 15 will do.
 const int POSITION_ATTRIBUTE_INDEX = 0;
@@ -32,12 +33,14 @@ void createProgram() {
     GLuint vertexShaderId = glCreateShader(GL_VERTEX_SHADER);
     glShaderSource(vertexShaderId, 1, &vertexShaderSource, &vertexShaderSourceLength);
     glCompileShader(vertexShaderId);
+	checkShaderStatus(vertexShaderId);
 
     const GLchar* fragmentShaderSource = readFile("tutorial03.frag");
     int fragmentShaderSourceLength = strlen(fragmentShaderSource);
     GLuint fragmentShaderId = glCreateShader(GL_FRAGMENT_SHADER);
     glShaderSource(fragmentShaderId, 1, &fragmentShaderSource, &fragmentShaderSourceLength);
     glCompileShader(fragmentShaderId);
+	checkShaderStatus(fragmentShaderId);
 
     programId = glCreateProgram();
     glAttachShader(programId, vertexShaderId);
