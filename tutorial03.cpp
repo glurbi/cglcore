@@ -115,7 +115,7 @@ void displayFunc() {
 
     // defines the model view projection matrix and set the corresponding uniform
     // NB: bottom and top are adjusted with the aspect ratio
-    matrice44 mvp;
+    matrix44 mvp;
     ortho(mvp, left, right, bottom / aspectRatio, top / aspectRatio, nearPlane, farPlane);
     GLuint matrixUniform = glGetUniformLocation(programId, "mvpMatrix");
     glUniformMatrix4fv(matrixUniform, 1, false, mvp);
