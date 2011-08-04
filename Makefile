@@ -6,7 +6,7 @@ CFLAGS = $(COMPILERFLAGS) $(INCLUDE)
 LIBRARIES = -lX11 -lglut -lGL -lGLEW
 COMMON = matrices.o files.o glutils.o
 
-all: tutorial01 tutorial02 tutorial03
+all: tutorial01 tutorial02 tutorial03 tutorial04
 
 common: matrices.cpp matrices.h files.cpp files.h glutils.cpp glutils.h
 	$(CC) $(CFLAGS) -c $(LIBDIR) $(LIBRARIES) matrices.cpp
@@ -21,6 +21,9 @@ tutorial02 : tutorial02.cpp
 
 tutorial03 : common tutorial03.cpp
 	$(CC) $(CFLAGS) -o tutorial03 $(LIBDIR) $(LIBRARIES) tutorial03.cpp $(COMMON)
+
+tutorial04 : common tutorial04.cpp
+	$(CC) $(CFLAGS) -o tutorial04 $(LIBDIR) $(LIBRARIES) tutorial04.cpp $(COMMON)
 
 clean:
 	-rm *.o
