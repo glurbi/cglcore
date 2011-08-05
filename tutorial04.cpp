@@ -3,9 +3,6 @@
 #include <stdio.h>
 #include <string.h>
 #include <GL/glew.h>
-#ifdef _WIN32
-#include <GL/wglew.h>
-#endif
 #include <GL/freeglut.h>
 
 #include <matrices.h>
@@ -31,19 +28,13 @@ long startTimeMillis;
 GLuint cubePositionsId;
 GLuint cubeNormalsId;
 GLuint programId;
+
 float aspectRatio;
+int frameCount;
+int currentWidth;
+int currentHeight;
 
 inline long currentTimeMillis() { return clock() / (CLOCKS_PER_SEC / 1000); }
-
-// Setting the swap interval is unfortunately platform dependent...
-void setSwapInterval(int interval) {
-#ifdef _WIN32
-    if (wglewIsSupported("WGL_EXT_swap_control")) {
-        wglSwapIntervalEXT(interval);
-        printf("WGL_EXT_swap_control is supported.");
-    }
-#endif
-}
 
 void createProgram() {
     const GLchar* vertexShaderSource = readFile("tutorial04.vert");
@@ -183,6 +174,8 @@ void reshapeFunc(int width, int height) {
     glViewport(0, 0, width, height);
     // we keep track of the aspect ratio to adjust the projection volume
     aspectRatio = 1.0f * width / height;
+    currentWidth = width;
+    currentHeight = height;
 }
 
 void displayFunc() {
@@ -195,6 +188,7 @@ void displayFunc() {
         initialized = true;
     }
 
+    frameCount++;
     long elapsed = currentTimeMillis() - startTimeMillis;
 
     glClear(GL_COLOR_BUFFER_BIT);
@@ -245,6 +239,19 @@ void keyboardFunc(unsigned char key, int x, int y) {
     exit(EXIT_SUCCESS);
 }
 
+void idleFunc() {
+    glutPostRedisplay();
+}
+
+// thanks to http://openglbook.com/the-book/chapter-1-getting-started/#toc-measuring-performance
+void timerFunc(int value) {
+    char title[512];
+    sprintf(title, "Tutorial04: %d FPS @ %d x %d", frameCount * 4, currentWidth, currentHeight);
+    glutSetWindowTitle(title);
+    frameCount = 0;
+    glutTimerFunc(250, timerFunc, 0);
+}
+
 int main(int argc, char **argv) {
     glutInit(&argc, argv);
     glutInitContextVersion(3, 3);
@@ -258,9 +265,10 @@ int main(int argc, char **argv) {
     // glewInit() must be called AFTER the OpenGL context has been created
     glewInit(); 
     glutDisplayFunc(&displayFunc);
-    glutIdleFunc(&displayFunc);
+    glutIdleFunc(&idleFunc);
     glutReshapeFunc(&reshapeFunc);
     glutKeyboardFunc(&keyboardFunc);
+    glutTimerFunc(0, timerFunc, 0);
     glutMainLoop();
     return EXIT_SUCCESS;
 }

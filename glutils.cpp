@@ -28,3 +28,14 @@ void checkProgramLinkStatus(GLuint programId) {
         printf("%s", log);
     }
 }
+
+// Setting the swap interval is unfortunately platform dependent...
+void setSwapInterval(int interval) {
+#ifdef _WIN32
+    if (wglewIsSupported("WGL_EXT_swap_control")) {
+        wglSwapIntervalEXT(interval);
+        printf("WGL_EXT_swap_control is supported.");
+    }
+#endif
+}
+
