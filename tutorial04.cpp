@@ -3,6 +3,9 @@
 #include <stdio.h>
 #include <string.h>
 #include <GL/glew.h>
+#ifdef _WIN32
+#include <GL/wglew.h>
+#endif
 #include <GL/freeglut.h>
 
 #include <matrices.h>
@@ -31,6 +34,15 @@ GLuint programId;
 float aspectRatio;
 
 inline long currentTimeMillis() { return clock() / (CLOCKS_PER_SEC / 1000); }
+
+void setSwapInterval(int interval) {
+#ifdef _WIN32
+    if (wglewIsSupported("WGL_EXT_swap_control")) {
+        wglSwapIntervalEXT(interval);
+        printf("WGL_EXT_swap_control is supported.");
+    }
+#endif
+}
 
 void createProgram() {
     const GLchar* vertexShaderSource = readFile("tutorial04.vert");
@@ -177,12 +189,12 @@ void displayFunc() {
     if (initialized == false) {
         createProgram();
         createCube();
+        setSwapInterval(1);
         startTimeMillis = currentTimeMillis();
         initialized = true;
     }
 
     long elapsed = currentTimeMillis() - startTimeMillis;
-    //long elapsed = 1500;
 
     glClear(GL_COLOR_BUFFER_BIT);
     glEnable(GL_CULL_FACE);
