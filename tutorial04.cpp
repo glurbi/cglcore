@@ -35,6 +35,7 @@ float aspectRatio;
 
 inline long currentTimeMillis() { return clock() / (CLOCKS_PER_SEC / 1000); }
 
+// Setting the swap interval is unfortunately platform dependent...
 void setSwapInterval(int interval) {
 #ifdef _WIN32
     if (wglewIsSupported("WGL_EXT_swap_control")) {
@@ -206,8 +207,8 @@ void displayFunc() {
     matrix44 *mv;
     matrices[0] = frustum(left, right, bottom / aspectRatio, top / aspectRatio, nearPlane, farPlane);
     matrices[1] = translate(0.0f, 0.0f, -3.0f);
-    matrices[2] = rotate(elapsed / 20, 1.0f, 0.0f, 0.0f);
-    matrices[3] = rotate(elapsed / 10, 0.0f, 1.0f, 0.0f);
+    matrices[2] = rotate(elapsed / 50, 1.0f, 0.0f, 0.0f);
+    matrices[3] = rotate(elapsed / 30, 0.0f, 1.0f, 0.0f);
     mvp = multm(*matrices[0], *matrices[1]);
     mvp = multm(*mvp, *matrices[2]);
     mvp = multm(*mvp, *matrices[3]);
@@ -249,11 +250,13 @@ int main(int argc, char **argv) {
     glutInitContextVersion(3, 3);
     glutInitContextFlags(GLUT_FORWARD_COMPATIBLE);
     glutInitContextProfile(GLUT_CORE_PROFILE);
-    glutInitDisplayMode(GLUT_RGBA | GLUT_DOUBLE | GLUT_ALPHA | GLUT_DEPTH);
+    // multisampling might not be supported by all hardware
+    glutInitDisplayMode(GLUT_RGBA | GLUT_DOUBLE | GLUT_MULTISAMPLE);
     glutInitWindowSize(800, 600);
     glutInitWindowPosition(0, 0);
     windowId = glutCreateWindow("Tutorial 04");
-    glewInit(); // must be called AFTER the OpenGL context has been created
+    // glewInit() must be called AFTER the OpenGL context has been created
+    glewInit(); 
     glutDisplayFunc(&displayFunc);
     glutIdleFunc(&displayFunc);
     glutReshapeFunc(&reshapeFunc);
