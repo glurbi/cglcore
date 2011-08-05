@@ -36,6 +36,12 @@ void setSwapInterval(int interval) {
         wglSwapIntervalEXT(interval);
         printf("WGL_EXT_swap_control is supported.");
     }
+#else
+    if (glxewIsSupported("GLX_EXT_swap_control")) {
+        Display *dpy = glXGetCurrentDisplay();
+        GLXDrawable drawable = glXGetCurrentDrawable();
+        glXSwapIntervalEXT(dpy, drawable, interval);
+    }
 #endif
 }
 

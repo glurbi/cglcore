@@ -1,10 +1,10 @@
 #include <stdlib.h>
-#include <time.h>
 #include <stdio.h>
 #include <string.h>
 #include <GL/glew.h>
 #include <GL/freeglut.h>
 
+#include <utils.h>
 #include <matrices.h>
 #include <files.h>
 #include <glutils.h>
@@ -33,8 +33,6 @@ float aspectRatio;
 int frameCount;
 int currentWidth;
 int currentHeight;
-
-inline long currentTimeMillis() { return clock() / (CLOCKS_PER_SEC / 1000); }
 
 void createProgram() {
     const GLchar* vertexShaderSource = readFile("tutorial04.vert");
@@ -201,8 +199,8 @@ void displayFunc() {
     matrix44 *mv;
     matrices[0] = frustum(left, right, bottom / aspectRatio, top / aspectRatio, nearPlane, farPlane);
     matrices[1] = translate(0.0f, 0.0f, -3.0f);
-    matrices[2] = rotate(elapsed / 50, 1.0f, 0.0f, 0.0f);
-    matrices[3] = rotate(elapsed / 30, 0.0f, 1.0f, 0.0f);
+    matrices[2] = rotate(elapsed / 10, 1.0f, 0.0f, 0.0f);
+    matrices[3] = rotate(elapsed / 5, 0.0f, 1.0f, 0.0f);
     mvp = multm(*matrices[0], *matrices[1]);
     mvp = multm(*mvp, *matrices[2]);
     mvp = multm(*mvp, *matrices[3]);
