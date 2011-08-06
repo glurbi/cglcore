@@ -1,7 +1,4 @@
 .cproject
 .project
-*.o
-tutorial01
-tutorial02
-tutorial03
-tutorial04
+gmon.out
+bin

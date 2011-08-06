@@ -1,6 +1,6 @@
 INCLUDE = -I/usr/include/ -I.
 LIBDIR  = -L/usr/X11R6/lib
-COMPILERFLAGS = -Wall -g
+COMPILERFLAGS = -Wall -g -pg
 CC = g++
 CFLAGS = $(COMPILERFLAGS) $(INCLUDE)
 LIBRARIES = -lX11 -lglut -lGL -lGLEW
@@ -31,4 +31,5 @@ tutorial04 : tutorial04.cpp
 
 clean:
 	-rm -rf bin
+	-rm gmon.out
 	
