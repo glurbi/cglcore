@@ -31,6 +31,7 @@ GLuint programId;
 
 float aspectRatio;
 int frameCount;
+int totalFrameCount;
 int currentWidth;
 int currentHeight;
 
@@ -181,13 +182,15 @@ void displayFunc() {
     if (initialized == false) {
         createProgram();
         createCube();
-        setSwapInterval(1);
+        setSwapInterval(0);
         startTimeMillis = currentTimeMillis();
         initialized = true;
     }
 
     frameCount++;
+    totalFrameCount++;
     long elapsed = currentTimeMillis() - startTimeMillis;
+
 
     glClear(GL_COLOR_BUFFER_BIT);
     glEnable(GL_CULL_FACE);
@@ -199,8 +202,8 @@ void displayFunc() {
     matrix44 *mv;
     matrices[0] = frustum(left, right, bottom / aspectRatio, top / aspectRatio, nearPlane, farPlane);
     matrices[1] = translate(0.0f, 0.0f, -3.0f);
-    matrices[2] = rotate(elapsed / 10, 1.0f, 0.0f, 0.0f);
-    matrices[3] = rotate(elapsed / 5, 0.0f, 1.0f, 0.0f);
+    matrices[2] = rotate(1.0f * elapsed / 100, 1.0f, 0.0f, 0.0f);
+    matrices[3] = rotate(1.0f * elapsed / 50, 0.0f, 1.0f, 0.0f);
     mvp = multm(*matrices[0], *matrices[1]);
     mvp = multm(*mvp, *matrices[2]);
     mvp = multm(*mvp, *matrices[3]);
@@ -267,6 +270,7 @@ int main(int argc, char **argv) {
     glutReshapeFunc(&reshapeFunc);
     glutKeyboardFunc(&keyboardFunc);
     glutTimerFunc(0, timerFunc, 0);
+    totalFrameCount = 0;
     glutMainLoop();
     return EXIT_SUCCESS;
 }
