@@ -28,14 +28,14 @@ GLuint programId;
 float aspectRatio;
 
 void createProgram() {
-    const GLchar* vertexShaderSource = readFile("tutorial03.vert");
+    const GLchar* vertexShaderSource = readTextFile("tutorial03.vert");
     int vertexShaderSourceLength = strlen(vertexShaderSource);
     GLuint vertexShaderId = glCreateShader(GL_VERTEX_SHADER);
     glShaderSource(vertexShaderId, 1, &vertexShaderSource, &vertexShaderSourceLength);
     glCompileShader(vertexShaderId);
 	checkShaderCompileStatus(vertexShaderId);
 
-    const GLchar* fragmentShaderSource = readFile("tutorial03.frag");
+    const GLchar* fragmentShaderSource = readTextFile("tutorial03.frag");
     int fragmentShaderSourceLength = strlen(fragmentShaderSource);
     GLuint fragmentShaderId = glCreateShader(GL_FRAGMENT_SHADER);
     glShaderSource(fragmentShaderId, 1, &fragmentShaderSource, &fragmentShaderSourceLength);

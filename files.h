@@ -1,6 +1,7 @@
 #ifndef _files_h_
 #define _files_h_
 
-extern const char* readFile(const char* filename);
+extern char* readTextFile(const char* filename);
+extern char* readPngFile(const char* filename, int *width, int *height, GLenum *format);
 
 #endif
