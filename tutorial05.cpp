@@ -11,14 +11,15 @@
 
 // Up to 16 attributes per vertex is allowed so any value between 0 and 15 will do.
 const int POSITION_ATTRIBUTE_INDEX = 0;
-const int TEXCOORD_ATTRIBUTE_INDEX = 1;
+const int NORMAL_ATTRIBUTE_INDEX = 1;
+const int TEXCOORD_ATTRIBUTE_INDEX = 2;
 
 // defines the perspective projection volume
-const float left = -1.5f;
-const float right = 1.5f;
-const float bottom = -1.5f;
-const float top = 1.5f;
-const float nearPlane = 1.0f;
+const float left = -1.0f;
+const float right = 1.0f;
+const float bottom = -1.0f;
+const float top = 1.0f;
+const float nearPlane = 2.0f;
 const float farPlane = 10.0f;
 
 int windowId; // the glut window id
@@ -28,6 +29,7 @@ long startTimeMillis;
 GLuint programId;
 GLuint textureId;
 GLuint cubePositionsId;
+GLuint cubeNormalsId;
 GLuint cubeTexCoordsId;
 
 float aspectRatio;
@@ -84,6 +86,53 @@ void createCube() {
     glGenBuffers(1, &cubePositionsId);
     glBindBuffer(GL_ARRAY_BUFFER, cubePositionsId);
     glBufferData(GL_ARRAY_BUFFER, sizeof(positions), positions, GL_STATIC_DRAW);
+    float normals[] = {
+        // back face
+        0.0f, 0.0f, -1.0f,
+        0.0f, 0.0f, -1.0f,
+        0.0f, 0.0f, -1.0f,
+        0.0f, 0.0f, -1.0f,
+        0.0f, 0.0f, -1.0f,
+        0.0f, 0.0f, -1.0f,
+        // front face
+        0.0f, 0.0f, 1.0f,
+        0.0f, 0.0f, 1.0f,
+        0.0f, 0.0f, 1.0f,
+        0.0f, 0.0f, 1.0f,
+        0.0f, 0.0f, 1.0f,
+        0.0f, 0.0f, 1.0f,
+        // bottom face
+        0.0f, -1.0f, 0.0f,
+        0.0f, -1.0f, 0.0f,
+        0.0f, -1.0f, 0.0f,
+        0.0f, -1.0f, 0.0f,
+        0.0f, -1.0f, 0.0f,
+        0.0f, -1.0f, 0.0f,
+        // top face
+        0.0f, 1.0f, 0.0f,
+        0.0f, 1.0f, 0.0f,
+        0.0f, 1.0f, 0.0f,
+        0.0f, 1.0f, 0.0f,
+        0.0f, 1.0f, 0.0f,
+        0.0f, 1.0f, 0.0f,
+        // left face
+        -1.0f, 0.0f, 0.0f,
+        -1.0f, 0.0f, 0.0f,
+        -1.0f, 0.0f, 0.0f,
+        -1.0f, 0.0f, 0.0f,
+        -1.0f, 0.0f, 0.0f,
+        -1.0f, 0.0f, 0.0f,
+        // right face
+        1.0f, 0.0f, 0.0f,
+        1.0f, 0.0f, 0.0f,
+        1.0f, 0.0f, 0.0f,
+        1.0f, 0.0f, 0.0f,
+        1.0f, 0.0f, 0.0f,
+        1.0f, 0.0f, 0.0f
+    };
+    glGenBuffers(1, &cubeNormalsId);
+    glBindBuffer(GL_ARRAY_BUFFER, cubeNormalsId);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(normals), normals, GL_STATIC_DRAW);
     float texcoords[] = {
         // back face
         1.0f, 1.0f,
@@ -152,6 +201,7 @@ void createProgram() {
     glAttachShader(programId, vertexShaderId);
     glAttachShader(programId, fragmentShaderId);
     glBindAttribLocation(programId, POSITION_ATTRIBUTE_INDEX, "pos");
+    glBindAttribLocation(programId, NORMAL_ATTRIBUTE_INDEX, "normal");
     glBindAttribLocation(programId, TEXCOORD_ATTRIBUTE_INDEX, "texcoord");
     glLinkProgram(programId);
     checkProgramLinkStatus(programId);
@@ -174,11 +224,15 @@ void renderCube() {
     glEnableVertexAttribArray(POSITION_ATTRIBUTE_INDEX);
     glBindBuffer(GL_ARRAY_BUFFER, cubePositionsId);
     glVertexAttribPointer(POSITION_ATTRIBUTE_INDEX, 3, GL_FLOAT, GL_FALSE, 0, 0);
+    glEnableVertexAttribArray(NORMAL_ATTRIBUTE_INDEX);
+    glBindBuffer(GL_ARRAY_BUFFER, cubeNormalsId);
+    glVertexAttribPointer(NORMAL_ATTRIBUTE_INDEX, 3, GL_FLOAT, GL_FALSE, 0, 0);
     glEnableVertexAttribArray(TEXCOORD_ATTRIBUTE_INDEX);
     glBindBuffer(GL_ARRAY_BUFFER, cubeTexCoordsId);
     glVertexAttribPointer(TEXCOORD_ATTRIBUTE_INDEX, 2, GL_FLOAT, GL_FALSE, 0, 0);
     glDrawArrays(GL_TRIANGLES, 0, 36);
     glDisableVertexAttribArray(POSITION_ATTRIBUTE_INDEX);
+    glDisableVertexAttribArray(NORMAL_ATTRIBUTE_INDEX);
     glDisableVertexAttribArray(TEXCOORD_ATTRIBUTE_INDEX);
     glBindBuffer(GL_ARRAY_BUFFER, 0);
 }
@@ -195,7 +249,9 @@ void displayFunc() {
 
     if (initialized == false) {
         glEnable(GL_TEXTURE_2D);
-        glEnable(GL_DEPTH_TEST);
+        glEnable (GL_BLEND);
+        glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
+        glCullFace(GL_CULL_FACE);
         createProgram();
         createTexture();
         createCube();
@@ -213,13 +269,16 @@ void displayFunc() {
     // calculate the ModelViewProjection and ModelViewProjection matrices
     matrix44 *matrices[4];
     matrix44 *mvp;
+    matrix44 *mv;
     matrices[0] = frustum(left, right, bottom / aspectRatio, top / aspectRatio, nearPlane, farPlane);
-    matrices[1] = translate(0.0f, 0.0f, -3.0f);
+    matrices[1] = translate(0.0f, 0.0f, -5.0f);
     matrices[2] = rotate(1.0f * elapsed / 100, 1.0f, 0.0f, 0.0f);
     matrices[3] = rotate(1.0f * elapsed / 50, 0.0f, 1.0f, 0.0f);
     mvp = multm(*matrices[0], *matrices[1]);
     mvp = multm(*mvp, *matrices[2]);
     mvp = multm(*mvp, *matrices[3]);
+    mv = multm(*matrices[1], *matrices[2]);
+    mv = multm(*mv, *matrices[3]);
 
     // activate the texture
     glBindTexture(GL_TEXTURE_2D, textureId);
@@ -227,18 +286,34 @@ void displayFunc() {
 
     // set the uniforms before rendering
     GLuint mvpMatrixUniform = glGetUniformLocation(programId, "mvpMatrix");
+    GLuint mvMatrixUniform = glGetUniformLocation(programId, "mvMatrix");
     GLuint colorUniform = glGetUniformLocation(programId, "color");
     GLuint textureUniform = glGetUniformLocation(programId, "texture");
+    GLuint lightDirUniform = glGetUniformLocation(programId, "lightDir");
     glUniformMatrix4fv(mvpMatrixUniform, 1, false, *mvp);
-    glUniform3f(colorUniform, 1.0f, 1.0f, 1.0f);
+    glUniformMatrix4fv(mvMatrixUniform, 1, false, *mv);
+    glUniform3f(lightDirUniform, 0.0f, 0.0f, -1.0f);
+    glUniform3f(colorUniform, 0.0f, 1.0f, 1.0f);
     glUniform1i(textureUniform, 0);
 
     // render!
+    glDisable(GL_DEPTH_TEST);
+    glFrontFace(GL_CW);
     renderCube();
+    glEnable(GL_DEPTH_TEST);
+    glFrontFace(GL_CCW);
+    renderCube();
+
+    // free resources
+    free(matrices[0]);
+    free(matrices[1]);
+    free(matrices[2]);
+    free(matrices[3]);
+    free(mvp);
+    free(mv);
 
     // display rendering buffer
     glutSwapBuffers();
-
 }
 
 void keyboardFunc(unsigned char key, int x, int y) {

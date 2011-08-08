@@ -2,12 +2,17 @@
 
 uniform sampler2D texture;
 
-in vec4 vColor;
+in vec3 vColor;
 in vec2 vTexCoord;
 
 out vec4 fColor;
 
 void main(void) 
-{ 
-	fColor = texture2D(texture, vTexCoord);
+{
+    vec4 texColor = texture2D(texture, vTexCoord);
+    if (texColor.a == 0.0f) {
+	    fColor = vec4(vColor, 0.7f);
+    } else {
+        fColor = texColor;
+    }
 }
