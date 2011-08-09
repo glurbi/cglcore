@@ -150,7 +150,7 @@ int main(int argc, char **argv) {
     glutInitContextVersion(3, 3);
     glutInitContextFlags(GLUT_FORWARD_COMPATIBLE);
     glutInitContextProfile(GLUT_CORE_PROFILE);
-    glutInitDisplayMode(GLUT_RGBA | GLUT_DOUBLE | GLUT_ALPHA | GLUT_DEPTH);
+    glutInitDisplayMode(GLUT_RGBA | GLUT_DOUBLE);
     glutInitWindowSize(800, 600);
     glutInitWindowPosition(0, 0);
     windowId = glutCreateWindow("Tutorial 03");
