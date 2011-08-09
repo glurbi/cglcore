@@ -4,13 +4,23 @@
 #include <GL/glew.h>
 #include <GL/freeglut.h>
 
-// the core "fixed" pipeline (or nvidia) seems to expect the position at the following index...
+/*
+ * In this tutorial, we render triangles without specifying a shader program.
+ * Even if we are using the core profile (i.e. no more fixed pipeline), the
+ * triangles are rendered in white on my nvidia card.
+ * The triangles are truncated. That is the effect of the clipping volume:
+ * xmin=-1.0f xmax=1.0f ymin=-1.0f ymax=1.0f zmin=-1.0f zmax=1.0f
+ */
+
+// the core "fixed" pipeline (or nvidia?) seems to expect the position at the
+// following index...
 const int POSITION_ATTRIBUTE_INDEX = 0;
 
 int windowId; // the glut window id
-bool initialized;
-GLuint triangleId;
+bool initialized; // have we initialized the buffer objects?
+GLuint triangleId; // the triangles VBO id TODO: rename to trianglesId
 
+// create the triangle vertex buffer
 void createTriangles() {
     float positions[3*3*9];
     for (int i = 0; i < 3; i++) {
@@ -31,6 +41,7 @@ void createTriangles() {
     glBufferData(GL_ARRAY_BUFFER, sizeof(positions), positions, GL_STATIC_DRAW);
 }
 
+// send the triangle vertices for drawing
 void renderTriangles() {
     glEnableVertexAttribArray(POSITION_ATTRIBUTE_INDEX);
     glBindBuffer(GL_ARRAY_BUFFER, triangleId);
@@ -39,10 +50,12 @@ void renderTriangles() {
     glDisableVertexAttribArray(POSITION_ATTRIBUTE_INDEX);
 }
 
+// glut callback invoked when the window is resized
 void reshapeFunc(int width, int height) {
     glViewport(0, 0, width, height);
 }
 
+// glut callback invoked each time the opengl buffer must be painted
 void displayFunc() {
 
     if (initialized == false) {
@@ -55,6 +68,7 @@ void displayFunc() {
     glutSwapBuffers();
 }
 
+// glut callback invoked each time a key has been pressed
 void keyboardFunc(unsigned char key, int x, int y) {
     glutDestroyWindow(windowId);
     exit(EXIT_SUCCESS);
@@ -71,6 +85,7 @@ int main(int argc, char **argv) {
     glutInitWindowPosition(0, 0);
     windowId = glutCreateWindow("Tutorial 01");
     glewInit(); // must be called AFTER the OpenGL context has been created
+				// i.e. after glutCreateWindow has been called
     glutDisplayFunc(&displayFunc);
     glutIdleFunc(&displayFunc);
     glutReshapeFunc(&reshapeFunc);

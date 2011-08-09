@@ -3,10 +3,16 @@
 #include <string.h>
 #include <GL/glew.h>
 #include <GL/freeglut.h>
-
 #include <matrices.h>
 #include <files.h>
 #include <glutils.h>
+
+/*
+ * In this tutorial, we render a triangle and a quad that overlap. It uses some
+ * transparency effect and demonstrates the use of a uniform for specifying the
+ * color of the geometries. In addition, the vertex positions are transformed
+ * using an orthographic projection.
+ */
 
 // Up to 16 attributes per vertex is allowed so any value between 0 and 15 will do.
 const int POSITION_ATTRIBUTE_INDEX = 0;

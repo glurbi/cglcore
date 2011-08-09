@@ -2,8 +2,6 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <png.h>
-#include <GL/gl.h>
-
 #include <files.h>
 
 char* readTextFile(const char* filename) {
@@ -46,12 +44,12 @@ char* readPngFile(const char* filename, int *width, int *height, GLenum *format)
     png_bytep image_data = (png_bytep) malloc(rowbytes * info_ptr->height);
     png_bytepp row_pointers = (png_bytepp) malloc(info_ptr->height * sizeof(png_bytep));
 
-    for (uint i = 0; i < info_ptr->height; ++i) {
+    for (unsigned int i = 0; i < info_ptr->height; ++i) {
       row_pointers[info_ptr->height - 1 - i] = image_data + i * rowbytes;
     }
 
     png_read_image(png_ptr, row_pointers);
-    png_read_destroy(png_ptr, info_ptr, (png_infop)0);
+    //png_read_destroy(png_ptr, info_ptr, (png_infop)0);
     free(png_ptr);
     free(info_ptr);
     free(row_pointers);

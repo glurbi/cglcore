@@ -9,6 +9,11 @@
 #include <files.h>
 #include <glutils.h>
 
+/*
+ * In this tutorial, we render a rotating cube, with some diffuse lighting.
+ * It uses a perspective projection for transforming the vextex positions.
+ */
+
 // Up to 16 attributes per vertex is allowed so any value between 0 and 15 will do.
 const int POSITION_ATTRIBUTE_INDEX = 0;
 const int NORMAL_ATTRIBUTE_INDEX = 1;

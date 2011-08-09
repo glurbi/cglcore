@@ -4,6 +4,12 @@
 #include <GL/glew.h>
 #include <GL/freeglut.h>
 
+/*
+ * In this tutorial, we render a triangle and a quad using a shader program
+ * that forwards the vertex position without tranformation  and invents some
+ * fragment color by using the vertex position.
+ */
+
 // Up to 16 attributes per vertex is allowed so any value between 0 and 15 will do.
 const int POSITION_ATTRIBUTE_INDEX = 12;
 
@@ -38,16 +44,26 @@ const GLchar* fragmentShaderSource =
 "}\n";
 
 void createProgram() {
+
+	//
+	// compile the vertex shader
+	//
     int vertexShaderSourceLength = strlen(vertexShaderSource);
     GLuint vertexShaderId = glCreateShader(GL_VERTEX_SHADER);
     glShaderSource(vertexShaderId, 1, &vertexShaderSource, &vertexShaderSourceLength);
     glCompileShader(vertexShaderId);
 
+	//
+	// compile the fragment shader
+	//
     int fragmentShaderSourceLength = strlen(fragmentShaderSource);
     GLuint fragmentShaderId = glCreateShader(GL_FRAGMENT_SHADER);
     glShaderSource(fragmentShaderId, 1, &fragmentShaderSource, &fragmentShaderSourceLength);
     glCompileShader(fragmentShaderId);
 
+	//
+	// link the shader program
+	//
     programId = glCreateProgram();
     glAttachShader(programId, vertexShaderId);
     glAttachShader(programId, fragmentShaderId);
