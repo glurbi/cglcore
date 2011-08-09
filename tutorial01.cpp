@@ -18,7 +18,7 @@ const int POSITION_ATTRIBUTE_INDEX = 0;
 
 int windowId; // the glut window id
 bool initialized; // have we initialized the buffer objects?
-GLuint triangleId; // the triangles VBO id TODO: rename to trianglesId
+GLuint trianglesId; // the triangles VBO id
 
 // create the triangle vertex buffer
 void createTriangles() {
@@ -36,15 +36,15 @@ void createTriangles() {
             positions[i*27+j*9+8] = 0.0f; // z3
         }
     }
-    glGenBuffers(1, &triangleId);
-    glBindBuffer(GL_ARRAY_BUFFER, triangleId);
+    glGenBuffers(1, &trianglesId);
+    glBindBuffer(GL_ARRAY_BUFFER, trianglesId);
     glBufferData(GL_ARRAY_BUFFER, sizeof(positions), positions, GL_STATIC_DRAW);
 }
 
 // send the triangle vertices for drawing
 void renderTriangles() {
     glEnableVertexAttribArray(POSITION_ATTRIBUTE_INDEX);
-    glBindBuffer(GL_ARRAY_BUFFER, triangleId);
+    glBindBuffer(GL_ARRAY_BUFFER, trianglesId);
     glVertexAttribPointer(POSITION_ATTRIBUTE_INDEX, 3, GL_FLOAT, GL_FALSE, 0, 0);
     glDrawArrays(GL_TRIANGLES, 0, 27);
     glDisableVertexAttribArray(POSITION_ATTRIBUTE_INDEX);

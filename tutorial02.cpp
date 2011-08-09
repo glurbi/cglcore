@@ -16,7 +16,7 @@ const int POSITION_ATTRIBUTE_INDEX = 12;
 int windowId; // the glut window id
 
 bool initialized = false;
-GLuint triangleId;
+GLuint trianglesId;
 GLuint quadId;
 GLuint programId;
 
@@ -79,8 +79,8 @@ void createTriangle() {
             1.0f, 0.0f, 0.0f,
             0.0f, 1.0f, 0.0f
     };
-    glGenBuffers(1, &triangleId);
-    glBindBuffer(GL_ARRAY_BUFFER, triangleId);
+    glGenBuffers(1, &trianglesId);
+    glBindBuffer(GL_ARRAY_BUFFER, trianglesId);
     glBufferData(GL_ARRAY_BUFFER, sizeof(positions), positions, GL_STATIC_DRAW);
 }
 
@@ -100,7 +100,7 @@ void createQuad() {
 
 void renderTriangle() {
     glEnableVertexAttribArray(POSITION_ATTRIBUTE_INDEX);
-    glBindBuffer(GL_ARRAY_BUFFER, triangleId);
+    glBindBuffer(GL_ARRAY_BUFFER, trianglesId);
     glVertexAttribPointer(POSITION_ATTRIBUTE_INDEX, 3, GL_FLOAT, GL_FALSE, 0, 0);
     glDrawArrays(GL_TRIANGLES, 0, 3);
     glDisableVertexAttribArray(POSITION_ATTRIBUTE_INDEX);
