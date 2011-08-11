@@ -6,8 +6,7 @@
 const float pi = atan(1.0f) * 4.0f;
 inline float toRadians(float degrees) { return degrees * pi / 180.0f; }
 
-matrix44* ortho(float left, float right, float bottom, float top, float near, float far) {
-    matrix44* m = (matrix44*) malloc(sizeof(matrix44));
+void ortho(matrix44* m, float left, float right, float bottom, float top, float near, float far) {
     (*m)[0] = 2 / (right - left);
     (*m)[1] = 0.0f;
     (*m)[2] = 0.0f;
@@ -24,11 +23,9 @@ matrix44* ortho(float left, float right, float bottom, float top, float near, fl
     (*m)[13] = -(top + bottom) / (top - bottom);
     (*m)[14] = -(far + near) / (far - near);
     (*m)[15] = 1.0f;
-    return m;
 }
 
-matrix44* identity() {
-    matrix44* m = (matrix44*) malloc(sizeof(matrix44));
+void identity(matrix44* m) {
     for (int i = 0; i < 16; i++) {
         (*m)[i] = 0.0f;
     }
@@ -36,7 +33,6 @@ matrix44* identity() {
     (*m)[5] = 1.0f;
     (*m)[10] = 1.0f;
     (*m)[15] = 1.0f;
-    return m;
 }
 
 matrix44* multm(matrix44 m1, matrix44 m2) {
@@ -65,8 +61,7 @@ vector4* multv(matrix44 m, vector4 v) {
     return result;
 }
 
-matrix44* frustum(float left, float right, float bottom, float top, float near, float far) {
-    matrix44* m = (matrix44*) malloc(sizeof(matrix44));
+void frustum(matrix44* m, float left, float right, float bottom, float top, float near, float far) {
     (*m)[0] = 2 * near / (right - left);
     (*m)[1] = 0.0f;
     (*m)[2] = 0.0f;
@@ -83,11 +78,9 @@ matrix44* frustum(float left, float right, float bottom, float top, float near, 
     (*m)[13] = 0.0f;
     (*m)[14] = -2.0f * far * near / (far - near);
     (*m)[15] = 0.0f;
-    return m;
 }
 
-matrix44* translate(float x, float y, float z) {
-    matrix44* m = (matrix44*) malloc(sizeof(matrix44));
+void translate(matrix44* m, float x, float y, float z) {
     (*m)[0] = 1.0f;
     (*m)[1] = 0.0f;
     (*m)[2] = 0.0f;
@@ -104,11 +97,9 @@ matrix44* translate(float x, float y, float z) {
     (*m)[13] = y;
     (*m)[14] = z;
     (*m)[15] = 1.0f;
-    return m;
 }
 
-matrix44* rotate(float a, float x, float y, float z) {
-    matrix44* m = (matrix44*) malloc(sizeof(matrix44));
+void rotate(matrix44* m, float a, float x, float y, float z) {
     float c = (float) cos(toRadians(a));
     float s = (float) sin(toRadians(a));
     (*m)[0] = x * x * (1 - c) + c;
@@ -127,7 +118,6 @@ matrix44* rotate(float a, float x, float y, float z) {
     (*m)[13] = 0.0f;
     (*m)[14] = 0.0f;
     (*m)[15] = 1.0f;
-    return m;
 }
 
 void printm(matrix44 m) {

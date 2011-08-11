@@ -202,18 +202,18 @@ void displayFunc() {
     glUseProgram(programId);
 
     // calculate the ModelViewProjection and ModelViewProjection matrices
-    matrix44 *matrices[4];
+    matrix44 matrices[4];
     matrix44 *mvp;
     matrix44 *mv;
-    matrices[0] = frustum(left, right, bottom / aspectRatio, top / aspectRatio, nearPlane, farPlane);
-    matrices[1] = translate(0.0f, 0.0f, -3.0f);
-    matrices[2] = rotate(1.0f * elapsed / 100, 1.0f, 0.0f, 0.0f);
-    matrices[3] = rotate(1.0f * elapsed / 50, 0.0f, 1.0f, 0.0f);
-    mvp = multm(*matrices[0], *matrices[1]);
-    mvp = multm(*mvp, *matrices[2]);
-    mvp = multm(*mvp, *matrices[3]);
-    mv = multm(*matrices[1], *matrices[2]);
-    mv = multm(*mv, *matrices[3]);
+    frustum(&matrices[0], left, right, bottom / aspectRatio, top / aspectRatio, nearPlane, farPlane);
+    translate(&matrices[1], 0.0f, 0.0f, -3.0f);
+    rotate(&matrices[2], 1.0f * elapsed / 100, 1.0f, 0.0f, 0.0f);
+    rotate(&matrices[3], 1.0f * elapsed / 50, 0.0f, 1.0f, 0.0f);
+    mvp = multm(matrices[0], matrices[1]);
+    mvp = multm(*mvp, matrices[2]);
+    mvp = multm(*mvp, matrices[3]);
+    mv = multm(matrices[1], matrices[2]);
+    mv = multm(*mv, matrices[3]);
 
     // set the uniforms before rendering
     GLuint mvpMatrixUniform = glGetUniformLocation(programId, "mvpMatrix");
@@ -232,10 +232,6 @@ void displayFunc() {
     glutSwapBuffers();
 
     // free resources
-    free(matrices[0]);
-    free(matrices[1]);
-    free(matrices[2]);
-    free(matrices[3]);
     free(mvp);
     free(mv);
 }
