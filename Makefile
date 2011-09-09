@@ -4,7 +4,7 @@ COMPILERFLAGS = -Wall -g -pg
 CXX = g++
 CXXFLAGS = $(COMPILERFLAGS) $(INCLUDE)
 LIBRARIES = -lX11 -lglut -lGL -lGLEW -lpng
-EXECUTABLES = tutorial01 tutorial02 tutorial03 tutorial04 tutorial05
+EXECUTABLES = tutorial01 tutorial02 tutorial03 tutorial04 tutorial05 tutorial06
 
 all: $(EXECUTABLES)
 
@@ -29,6 +29,9 @@ tutorial04: tutorial04.o matrices.o files.o glutils.o utils.h
 	
 tutorial05: tutorial05.o matrices.o files.o glutils.o utils.h
 	$(CXX) $(CXXFLAGS) $(LIBRARIES) -o $@ tutorial05.o matrices.o files.o glutils.o
+	
+tutorial06: tutorial06.o matrices.o files.o glutils.o utils.h torus.o torus.h
+	$(CXX) $(CXXFLAGS) $(LIBRARIES) -o $@ tutorial06.o matrices.o files.o glutils.o torus.o
 	
 clean:
 	-rm *.o

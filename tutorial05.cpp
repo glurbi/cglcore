@@ -330,7 +330,7 @@ void idleFunc() {
 // thanks to http://openglbook.com/the-book/chapter-1-getting-started/#toc-measuring-performance
 void timerFunc(int value) {
     char title[512];
-    sprintf(title, "Tutorial04: %d FPS @ %d x %d", frameCount * 4, currentWidth, currentHeight);
+    sprintf(title, "Tutorial05: %d FPS @ %d x %d", frameCount * 4, currentWidth, currentHeight);
     glutSetWindowTitle(title);
     frameCount = 0;
     glutTimerFunc(250, timerFunc, 0);

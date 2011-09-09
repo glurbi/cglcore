@@ -8,31 +8,35 @@
 #include <matrices.h>
 #include <files.h>
 #include <glutils.h>
+#include <torus.h>
 
 /*
- * In this tutorial, we render a rotating cube, with some diffuse lighting.
- * It uses a perspective projection for transforming the vertex positions.
+ * In this tutorial, we render a rotating torus with a diffuse and a specular
+ * light component.
  */
+
+// determines the number of vertices in the torus
+int n = 30;
 
 // Up to 16 attributes per vertex is allowed so any value between 0 and 15 will do.
 const int POSITION_ATTRIBUTE_INDEX = 0;
 const int NORMAL_ATTRIBUTE_INDEX = 1;
 
 // defines the perspective projection volume
-const float left = -1.5f;
-const float right = 1.5f;
-const float bottom = -1.5f;
-const float top = 1.5f;
-const float nearPlane = 1.0f;
+const float left = -1.0f;
+const float right = 1.0f;
+const float bottom = -1.0f;
+const float top = 1.0f;
+const float nearPlane = 2.0f;
 const float farPlane = 10.0f;
 
 int windowId; // the glut window id
 
 bool initialized = false;
 long startTimeMillis;
-GLuint cubePositionsId;
-GLuint cubeNormalsId;
 GLuint programId;
+GLuint torusPositionsId;
+GLuint torusNormalsId;
 
 float aspectRatio;
 int frameCount;
@@ -41,14 +45,14 @@ int currentWidth;
 int currentHeight;
 
 void createProgram() {
-    const GLchar* vertexShaderSource = readTextFile("tutorial04.vert");
+    const GLchar* vertexShaderSource = readTextFile("tutorial06.vert");
     int vertexShaderSourceLength = strlen(vertexShaderSource);
     GLuint vertexShaderId = glCreateShader(GL_VERTEX_SHADER);
     glShaderSource(vertexShaderId, 1, &vertexShaderSource, &vertexShaderSourceLength);
     glCompileShader(vertexShaderId);
 	checkShaderCompileStatus(vertexShaderId);
 
-    const GLchar* fragmentShaderSource = readTextFile("tutorial04.frag");
+    const GLchar* fragmentShaderSource = readTextFile("tutorial06.frag");
     int fragmentShaderSourceLength = strlen(fragmentShaderSource);
     GLuint fragmentShaderId = glCreateShader(GL_FRAGMENT_SHADER);
     glShaderSource(fragmentShaderId, 1, &fragmentShaderSource, &fragmentShaderSourceLength);
@@ -59,118 +63,16 @@ void createProgram() {
     glAttachShader(programId, vertexShaderId);
     glAttachShader(programId, fragmentShaderId);
     glBindAttribLocation(programId, POSITION_ATTRIBUTE_INDEX, "vPosition");
-    glBindAttribLocation(programId, NORMAL_ATTRIBUTE_INDEX, "vNormal");
     glLinkProgram(programId);
     checkProgramLinkStatus(programId);
 }
 
-void createCube() {
-    float positions[] = {
-        // back face
-        1.0f, 1.0f, -1.0f,
-        -1.0f, -1.0f, -1.0f,
-        -1.0f, 1.0f, -1.0f,
-        1.0f, 1.0f, -1.0f,
-        1.0f, -1.0f, -1.0f,
-        -1.0f, -1.0f, -1.0f,
-        // front face
-        -1.0f, 1.0f, 1.0f,
-        -1.0f, -1.0f, 1.0f,
-        1.0f, 1.0f, 1.0f,
-        -1.0f, -1.0f, 1.0f,
-        1.0f, -1.0f, 1.0f,
-        1.0f, 1.0f, 1.0f,
-        // bottom face
-        -1.0f, -1.0f, 1.0f,
-        -1.0f, -1.0f, -1.0f, 
-        1.0f, -1.0f, 1.0f,
-        -1.0f, -1.0f, -1.0f,
-        1.0f, -1.0f, -1.0f,
-        1.0f, -1.0f, 1.0f,
-        // top face
-        -1.0f, 1.0f, 1.0f,
-        1.0f, 1.0f, 1.0f,
-        -1.0f, 1.0f, -1.0f, 
-        -1.0f, 1.0f, -1.0f,
-        1.0f, 1.0f, 1.0f,
-        1.0f, 1.0f, -1.0f,
-        // left face
-        -1.0f, -1.0f, -1.0f, 
-        -1.0f, -1.0f, 1.0f,
-        -1.0f, 1.0f, 1.0f,
-        -1.0f, 1.0f, -1.0f,
-        -1.0f, -1.0f, -1.0f,
-        -1.0f, 1.0f, 1.0f,
-        // right face
-        1.0f, 1.0f, 1.0f,
-        1.0f, -1.0f, 1.0f,
-        1.0f, -1.0f, -1.0f, 
-        1.0f, -1.0f, -1.0f,
-        1.0f, 1.0f, -1.0f,
-        1.0f, 1.0f, 1.0f
-    };
-    glGenBuffers(1, &cubePositionsId);
-    glBindBuffer(GL_ARRAY_BUFFER, cubePositionsId);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(positions), positions, GL_STATIC_DRAW);
-    float normals[] = {
-        // back face
-        0.0f, 0.0f, -1.0f,
-        0.0f, 0.0f, -1.0f,
-        0.0f, 0.0f, -1.0f,
-        0.0f, 0.0f, -1.0f,
-        0.0f, 0.0f, -1.0f,
-        0.0f, 0.0f, -1.0f,
-        // front face
-        0.0f, 0.0f, 1.0f,
-        0.0f, 0.0f, 1.0f,
-        0.0f, 0.0f, 1.0f,
-        0.0f, 0.0f, 1.0f,
-        0.0f, 0.0f, 1.0f,
-        0.0f, 0.0f, 1.0f, 
-        // bottom face
-        0.0f, -1.0f, 0.0f,
-        0.0f, -1.0f, 0.0f,
-        0.0f, -1.0f, 0.0f,
-        0.0f, -1.0f, 0.0f,
-        0.0f, -1.0f, 0.0f,
-        0.0f, -1.0f, 0.0f,
-        // top face
-        0.0f, 1.0f, 0.0f,
-        0.0f, 1.0f, 0.0f,
-        0.0f, 1.0f, 0.0f,
-        0.0f, 1.0f, 0.0f,
-        0.0f, 1.0f, 0.0f,
-        0.0f, 1.0f, 0.0f,
-        // left face
-        -1.0f, 0.0f, 0.0f,
-        -1.0f, 0.0f, 0.0f,
-        -1.0f, 0.0f, 0.0f,
-        -1.0f, 0.0f, 0.0f,
-        -1.0f, 0.0f, 0.0f,
-        -1.0f, 0.0f, 0.0f,
-        // right face
-        1.0f, 0.0f, 0.0f,
-        1.0f, 0.0f, 0.0f,
-        1.0f, 0.0f, 0.0f,
-        1.0f, 0.0f, 0.0f,
-        1.0f, 0.0f, 0.0f,
-        1.0f, 0.0f, 0.0f
-    };
-    glGenBuffers(1, &cubeNormalsId);
-    glBindBuffer(GL_ARRAY_BUFFER, cubeNormalsId);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(normals), normals, GL_STATIC_DRAW);
-}
-
-void renderCube() {
+void renderTorus() {
     glEnableVertexAttribArray(POSITION_ATTRIBUTE_INDEX);
-    glBindBuffer(GL_ARRAY_BUFFER, cubePositionsId);
+    glBindBuffer(GL_ARRAY_BUFFER, torusPositionsId);
     glVertexAttribPointer(POSITION_ATTRIBUTE_INDEX, 3, GL_FLOAT, GL_FALSE, 0, 0);
-    glEnableVertexAttribArray(NORMAL_ATTRIBUTE_INDEX);
-    glBindBuffer(GL_ARRAY_BUFFER, cubeNormalsId);
-    glVertexAttribPointer(NORMAL_ATTRIBUTE_INDEX, 3, GL_FLOAT, GL_FALSE, 0, 0);
-    glDrawArrays(GL_TRIANGLES, 0, 36);
+    glDrawArrays(GL_TRIANGLES, 0, torusAttributeCount(n));
     glDisableVertexAttribArray(POSITION_ATTRIBUTE_INDEX);
-    glDisableVertexAttribArray(NORMAL_ATTRIBUTE_INDEX);
     glBindBuffer(GL_ARRAY_BUFFER, 0);
 }
 
@@ -185,9 +87,10 @@ void reshapeFunc(int width, int height) {
 void displayFunc() {
 
     if (initialized == false) {
+        glCullFace(GL_CULL_FACE);
+        glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+        torusPositionsId = createTorusPositions(n, 0.3f, 1.0f);
         createProgram();
-        createCube();
-        setSwapInterval(0);
         startTimeMillis = currentTimeMillis();
         initialized = true;
     }
@@ -196,9 +99,7 @@ void displayFunc() {
     totalFrameCount++;
     long elapsed = currentTimeMillis() - startTimeMillis;
 
-
-    glClear(GL_COLOR_BUFFER_BIT);
-    glEnable(GL_CULL_FACE);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     glUseProgram(programId);
 
     // calculate the ModelViewProjection and ModelViewProjection matrices
@@ -207,7 +108,7 @@ void displayFunc() {
     matrix44 mv;
     matrix44 tmp;
     frustum(matrices[0], left, right, bottom / aspectRatio, top / aspectRatio, nearPlane, farPlane);
-    translate(matrices[1], 0.0f, 0.0f, -3.0f);
+    translate(matrices[1], 0.0f, 0.0f, -5.0f);
     rotate(matrices[2], 1.0f * elapsed / 100, 1.0f, 0.0f, 0.0f);
     rotate(matrices[3], 1.0f * elapsed / 50, 0.0f, 1.0f, 0.0f);
     multm(mvp, matrices[0], matrices[1]);
@@ -226,15 +127,14 @@ void displayFunc() {
     GLuint lightDirUniform = glGetUniformLocation(programId, "lightDir");
     glUniformMatrix4fv(mvpMatrixUniform, 1, false, mvp);
     glUniformMatrix4fv(mvMatrixUniform, 1, false, mv);
-    glUniform3f(colorUniform, 0.0f, 1.0f, 0.0f);
     glUniform3f(lightDirUniform, 0.0f, 0.0f, -1.0f);
-    
-	// render the cube
-    renderCube();
+    glUniform3f(colorUniform, 1.0f, 1.0f, 1.0f);
+
+    // render!
+    renderTorus();
 
     // display rendering buffer
     glutSwapBuffers();
-
 }
 
 void keyboardFunc(unsigned char key, int x, int y) {
@@ -246,10 +146,11 @@ void idleFunc() {
     glutPostRedisplay();
 }
 
+// TODO: move to glutils.cpp.h
 // thanks to http://openglbook.com/the-book/chapter-1-getting-started/#toc-measuring-performance
 void timerFunc(int value) {
     char title[512];
-    sprintf(title, "Tutorial04: %d FPS @ %d x %d", frameCount * 4, currentWidth, currentHeight);
+    sprintf(title, "Tutorial06: %d FPS @ %d x %d", frameCount * 4, currentWidth, currentHeight);
     glutSetWindowTitle(title);
     frameCount = 0;
     glutTimerFunc(250, timerFunc, 0);
@@ -261,10 +162,10 @@ int main(int argc, char **argv) {
     glutInitContextFlags(GLUT_FORWARD_COMPATIBLE);
     glutInitContextProfile(GLUT_CORE_PROFILE);
     // multisampling might not be supported by all hardware
-    glutInitDisplayMode(GLUT_RGBA | GLUT_DOUBLE | GLUT_MULTISAMPLE);
+    glutInitDisplayMode(GLUT_RGBA | GLUT_DOUBLE | GLUT_MULTISAMPLE | GLUT_DEPTH);
     glutInitWindowSize(800, 600);
     glutInitWindowPosition(0, 0);
-    windowId = glutCreateWindow("Tutorial 04");
+    windowId = glutCreateWindow("Tutorial 06");
     // glewInit() must be called AFTER the OpenGL context has been created
     glewInit(); 
     glutDisplayFunc(&displayFunc);
