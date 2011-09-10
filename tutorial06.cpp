@@ -63,6 +63,7 @@ void createProgram() {
     glAttachShader(programId, vertexShaderId);
     glAttachShader(programId, fragmentShaderId);
     glBindAttribLocation(programId, POSITION_ATTRIBUTE_INDEX, "vPosition");
+    glBindAttribLocation(programId, NORMAL_ATTRIBUTE_INDEX, "vNormal");
     glLinkProgram(programId);
     checkProgramLinkStatus(programId);
 }
@@ -71,8 +72,12 @@ void renderTorus() {
     glEnableVertexAttribArray(POSITION_ATTRIBUTE_INDEX);
     glBindBuffer(GL_ARRAY_BUFFER, torusPositionsId);
     glVertexAttribPointer(POSITION_ATTRIBUTE_INDEX, 3, GL_FLOAT, GL_FALSE, 0, 0);
+    glEnableVertexAttribArray(NORMAL_ATTRIBUTE_INDEX);
+    glBindBuffer(GL_ARRAY_BUFFER, torusNormalsId);
+    glVertexAttribPointer(NORMAL_ATTRIBUTE_INDEX, 3, GL_FLOAT, GL_FALSE, 0, 0);
     glDrawArrays(GL_TRIANGLES, 0, torusAttributeCount(n));
     glDisableVertexAttribArray(POSITION_ATTRIBUTE_INDEX);
+    glDisableVertexAttribArray(NORMAL_ATTRIBUTE_INDEX);
     glBindBuffer(GL_ARRAY_BUFFER, 0);
 }
 
@@ -87,9 +92,10 @@ void reshapeFunc(int width, int height) {
 void displayFunc() {
 
     if (initialized == false) {
-        glCullFace(GL_CULL_FACE);
-        glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+        glEnable(GL_CULL_FACE);
+        glEnable(GL_DEPTH_TEST);
         torusPositionsId = createTorusPositions(n, 0.3f, 1.0f);
+        torusNormalsId = createTorusNormals(n, 0.3f, 1.0f);
         createProgram();
         startTimeMillis = currentTimeMillis();
         initialized = true;
@@ -128,7 +134,7 @@ void displayFunc() {
     glUniformMatrix4fv(mvpMatrixUniform, 1, false, mvp);
     glUniformMatrix4fv(mvMatrixUniform, 1, false, mv);
     glUniform3f(lightDirUniform, 0.0f, 0.0f, -1.0f);
-    glUniform3f(colorUniform, 1.0f, 1.0f, 1.0f);
+    glUniform3f(colorUniform, 1.0f, 0.0f, 0.0f);
 
     // render!
     renderTorus();
