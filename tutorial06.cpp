@@ -130,11 +130,13 @@ void displayFunc() {
     GLuint mvpMatrixUniform = glGetUniformLocation(programId, "mvpMatrix");
     GLuint mvMatrixUniform = glGetUniformLocation(programId, "mvMatrix");
     GLuint colorUniform = glGetUniformLocation(programId, "color");
+    GLuint ambientUniform = glGetUniformLocation(programId, "ambient");
     GLuint lightDirUniform = glGetUniformLocation(programId, "lightDir");
     glUniformMatrix4fv(mvpMatrixUniform, 1, false, mvp);
     glUniformMatrix4fv(mvMatrixUniform, 1, false, mv);
-    glUniform3f(lightDirUniform, 0.0f, 0.0f, -1.0f);
-    glUniform3f(colorUniform, 1.0f, 0.0f, 0.0f);
+    glUniform3f(lightDirUniform, 1.0f, 0.0f, -1.0f);
+    glUniform4f(colorUniform, 0.9f, 0.0f, 0.0f, 1.0f);
+    glUniform4f(ambientUniform, 0.1f, 0.1f, 0.1f, 1.0f);
 
     // render!
     renderTorus();

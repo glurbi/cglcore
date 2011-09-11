@@ -2,7 +2,8 @@
 
 uniform mat4 mvpMatrix;
 uniform mat4 mvMatrix;
-uniform vec3 color;
+uniform vec4 color;
+uniform vec4 ambient;
 uniform vec3 lightDir;
 
 in vec3 vPosition;
@@ -19,8 +20,8 @@ void main(void)
        The value will be positive when the diffuse light should be ignored, negative otherwise. */
     float dotProduct = dot(normalEye, lightDir);
 
-    float diffuse = max(-dotProduct, 0.0f);
+    vec4 diffuse = color * max(-dotProduct, 0.0f);
     
-    vColor = vec4(color, 1.0f) * diffuse;
+    vColor =  diffuse + ambient;
     gl_Position = mvpMatrix * vec4(vPosition, 1.0f);
 }
