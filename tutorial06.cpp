@@ -11,8 +11,8 @@
 #include <torus.h>
 
 /*
- * In this tutorial, we render a rotating torus with a diffuse and a specular
- * light component.
+ * In this tutorial, we render a rotating torus with ambient, diffuse and
+ * specular light component, using Gouraud lighting (per vertex lighting).
  */
 
 // determines the number of vertices in the torus
@@ -115,8 +115,8 @@ void displayFunc() {
     matrix44 tmp;
     frustum(matrices[0], left, right, bottom / aspectRatio, top / aspectRatio, nearPlane, farPlane);
     translate(matrices[1], 0.0f, 0.0f, -5.0f);
-    rotate(matrices[2], 1.0f * elapsed / 100, 1.0f, 0.0f, 0.0f);
-    rotate(matrices[3], 1.0f * elapsed / 50, 0.0f, 1.0f, 0.0f);
+    rotate(matrices[2], 1.0f * elapsed / 30, 1.0f, 0.0f, 0.0f);
+    rotate(matrices[3], 1.0f * elapsed / 10, 0.0f, 1.0f, 0.0f);
     multm(mvp, matrices[0], matrices[1]);
     multm(tmp, mvp, matrices[2]);
     memcpy(mvp, tmp, sizeof(matrix44));
@@ -134,8 +134,8 @@ void displayFunc() {
     GLuint lightDirUniform = glGetUniformLocation(programId, "lightDir");
     glUniformMatrix4fv(mvpMatrixUniform, 1, false, mvp);
     glUniformMatrix4fv(mvMatrixUniform, 1, false, mv);
-    glUniform3f(lightDirUniform, 1.0f, 0.0f, -1.0f);
-    glUniform4f(colorUniform, 0.9f, 0.0f, 0.0f, 1.0f);
+    glUniform3f(lightDirUniform, 1.0f, -1.0f, -1.0f);
+    glUniform4f(colorUniform, 0.8f, 0.0f, 0.0f, 1.0f);
     glUniform4f(ambientUniform, 0.1f, 0.1f, 0.1f, 1.0f);
 
     // render!
