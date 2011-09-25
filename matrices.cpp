@@ -6,6 +6,83 @@
 const float pi = atan(1.0f) * 4.0f;
 inline float toRadians(float degrees) { return degrees * pi / 180.0f; }
 
+Matrix44::Matrix44() {
+    identity(m);
+}
+
+float* Matrix44::raw() {
+    return m;
+}
+
+MatrixStack44::MatrixStack44() {
+    identity();
+}
+
+MatrixStack44& MatrixStack44::identity() {
+    Matrix44* m = new Matrix44();
+    ::identity(m->raw());
+    mvp.push(*m);
+    mv.push(*m);
+    return *this;
+}
+
+MatrixStack44& MatrixStack44::ortho(float left, float right, float bottom, float top, float near, float far) {
+    Matrix44* m = new Matrix44();
+    ::ortho(m->raw(), left, right, bottom, top, near, far);
+    mvp.push(*m);
+    return *this;
+}
+
+MatrixStack44& MatrixStack44::frustum(float left, float right, float bottom, float top, float near, float far) {
+    Matrix44* m = new Matrix44();
+    ::frustum(m->raw(), left, right, bottom, top, near, far);
+    mvp.push(*m);
+    return *this;
+}
+
+MatrixStack44& MatrixStack44::translate(float x, float y, float z) {
+    Matrix44 translation;
+    ::translate(translation.raw(), x, y, z);
+    Matrix44* m1 = new Matrix44();
+    multm(m1->raw(), mvp.top().raw(), translation.raw());
+    mvp.push(*m1);
+    Matrix44* m2 = new Matrix44();
+    multm(m2->raw(), mv.top().raw(), translation.raw());
+    mv.push(*m2);
+    return *this;
+}
+
+MatrixStack44& MatrixStack44::rotate(float a, float x, float y, float z) {
+    Matrix44 rotation;
+    ::rotate(rotation.raw(), a, x, y, z);
+    Matrix44 m;
+    Matrix44* m1 = new Matrix44();
+    multm(m1->raw(), mvp.top().raw(), rotation.raw());
+    mvp.push(*m1);
+    Matrix44* m2 = new Matrix44();
+    multm(m2->raw(), mv.top().raw(), rotation.raw());
+    mv.push(*m2);
+    return *this;
+}
+
+Matrix44& MatrixStack44::modelViewProjection() {
+    return mvp.top();
+}
+
+Matrix44& MatrixStack44::modelView() {
+    return mv.top();
+}
+
+void identity(matrix44 m) {
+    for (int i = 0; i < 16; i++) {
+        m[i] = 0.0f;
+    }
+    m[0] = 1.0f;
+    m[5] = 1.0f;
+    m[10] = 1.0f;
+    m[15] = 1.0f;
+}
+
 void ortho(matrix44 m, float left, float right, float bottom, float top, float near, float far) {
     m[0] = 2 / (right - left);
     m[1] = 0.0f;
@@ -22,16 +99,6 @@ void ortho(matrix44 m, float left, float right, float bottom, float top, float n
     m[12] = -(right + left) / (right - left);
     m[13] = -(top + bottom) / (top - bottom);
     m[14] = -(far + near) / (far - near);
-    m[15] = 1.0f;
-}
-
-void identity(matrix44 m) {
-    for (int i = 0; i < 16; i++) {
-        m[i] = 0.0f;
-    }
-    m[0] = 1.0f;
-    m[5] = 1.0f;
-    m[10] = 1.0f;
     m[15] = 1.0f;
 }
 
