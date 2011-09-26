@@ -1,5 +1,5 @@
-#ifndef _matrices_h_
-#define _matrices_h_
+#ifndef _matrices_hpp_
+#define _matrices_hpp_
 
 #include <stack>
 
@@ -8,9 +8,21 @@ using namespace std;
 typedef float matrix44[16];
 typedef float vector4[4];
 
+class Vector4 {
+public:
+    inline Vector4(float x, float y, float z, float w)
+        { m[0] = x; m[1] = y; m[2] = z; m[3] = w;}
+    inline float* raw() { return m; }
+    inline float x() { return m[0]; }
+    inline float y() { return m[1]; }
+    inline float z() { return m[2]; }
+    inline float w() { return m[3]; }
+private:
+    float m[4];
+};
+
 class Matrix44 {
 public:
-    Matrix44();
     float* raw();
 private:
     float m[16];

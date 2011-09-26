@@ -3,7 +3,7 @@
 #include <string.h>
 #include <GL/glew.h>
 #include <GL/freeglut.h>
-#include <matrices.h>
+#include <matrices.hpp>
 #include <files.h>
 #include <glutils.h>
 

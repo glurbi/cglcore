@@ -5,7 +5,7 @@
 #include <GL/freeglut.h>
 
 #include <utils.h>
-#include <matrices.h>
+#include <matrices.hpp>
 #include <files.h>
 #include <glutils.h>
 #include <torus.h>

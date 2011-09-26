@@ -11,7 +11,7 @@ all: $(EXECUTABLES)
 .c.o: 
 	$(CXX) $(CFLAGS) $(LIBDIR) –c $(.SOURCE) 
 
-matrices.o: matrices.h
+matrices.o: matrices.hpp
 files.o: files.h
 glutils.o: glutils.h
 

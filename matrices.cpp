@@ -1,14 +1,11 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include <matrices.h>
 #include <math.h>
+
+#include <matrices.hpp>
 
 const float pi = atan(1.0f) * 4.0f;
 inline float toRadians(float degrees) { return degrees * pi / 180.0f; }
-
-Matrix44::Matrix44() {
-    identity(m);
-}
 
 float* Matrix44::raw() {
     return m;
@@ -55,7 +52,6 @@ MatrixStack44& MatrixStack44::translate(float x, float y, float z) {
 MatrixStack44& MatrixStack44::rotate(float a, float x, float y, float z) {
     Matrix44 rotation;
     ::rotate(rotation.raw(), a, x, y, z);
-    Matrix44 m;
     Matrix44* m1 = new Matrix44();
     multm(m1->raw(), mvp.top().raw(), rotation.raw());
     mvp.push(*m1);
