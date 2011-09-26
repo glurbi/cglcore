@@ -202,30 +202,19 @@ void displayFunc() {
     glUseProgram(programId);
 
     // calculate the ModelViewProjection and ModelViewProjection matrices
-    matrix44 matrices[4];
-    matrix44 mvp;
-    matrix44 mv;
-    matrix44 tmp;
-    frustum(matrices[0], left, right, bottom / aspectRatio, top / aspectRatio, nearPlane, farPlane);
-    translate(matrices[1], 0.0f, 0.0f, -3.0f);
-    rotate(matrices[2], 1.0f * elapsed / 100, 1.0f, 0.0f, 0.0f);
-    rotate(matrices[3], 1.0f * elapsed / 50, 0.0f, 1.0f, 0.0f);
-    multm(mvp, matrices[0], matrices[1]);
-    multm(tmp, mvp, matrices[2]);
-    memcpy(mvp, tmp, sizeof(matrix44));
-    multm(tmp, mvp, matrices[3]);
-    memcpy(mvp, tmp, sizeof(matrix44));
-    multm(mv, matrices[1], matrices[2]);
-    multm(tmp, mv, matrices[3]);
-    memcpy(mv, tmp, sizeof(matrix44));
+    MatrixStack44 mstack;
+    mstack.frustum(left, right, bottom / aspectRatio, top / aspectRatio, nearPlane, farPlane)
+          .translate(0.0f, 0.0f, -3.0f)
+          .rotate(1.0f * elapsed / 100, 1.0f, 0.0f, 0.0f)
+          .rotate(1.0f * elapsed / 50, 0.0f, 1.0f, 0.0f);
 
     // set the uniforms before rendering
     GLuint mvpMatrixUniform = glGetUniformLocation(programId, "mvpMatrix");
     GLuint mvMatrixUniform = glGetUniformLocation(programId, "mvMatrix");
     GLuint colorUniform = glGetUniformLocation(programId, "color");
     GLuint lightDirUniform = glGetUniformLocation(programId, "lightDir");
-    glUniformMatrix4fv(mvpMatrixUniform, 1, false, mvp);
-    glUniformMatrix4fv(mvMatrixUniform, 1, false, mv);
+    glUniformMatrix4fv(mvpMatrixUniform, 1, false, mstack.modelViewProjection().raw());
+    glUniformMatrix4fv(mvMatrixUniform, 1, false, mstack.modelView().raw());
     glUniform3f(colorUniform, 0.0f, 1.0f, 0.0f);
     glUniform3f(lightDirUniform, 0.0f, 0.0f, -1.0f);
     
