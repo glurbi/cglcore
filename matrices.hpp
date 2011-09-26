@@ -2,8 +2,10 @@
 #define _matrices_hpp_
 
 #include <stack>
+#include <boost/shared_ptr.hpp>
 
 using namespace std;
+using namespace boost;
 
 typedef float matrix44[16];
 typedef float vector4[4];
@@ -39,8 +41,8 @@ public:
     Matrix44& modelViewProjection();
     Matrix44& modelView();
 private:
-    stack<Matrix44> mvp; // ModelViewProjection
-    stack<Matrix44> mv; // ModelView
+    stack<shared_ptr<Matrix44> > mvp; // ModelViewProjection
+    stack<shared_ptr<Matrix44> > mv; // ModelView
 };
 
 extern void identity(matrix44 m);

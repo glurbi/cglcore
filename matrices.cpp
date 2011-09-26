@@ -16,57 +16,57 @@ MatrixStack44::MatrixStack44() {
 }
 
 MatrixStack44& MatrixStack44::identity() {
-    Matrix44* m = new Matrix44();
+    shared_ptr<Matrix44> m(new Matrix44());
     ::identity(m->raw());
-    mvp.push(*m);
-    mv.push(*m);
+    mvp.push(m);
+    mv.push(m);
     return *this;
 }
 
 MatrixStack44& MatrixStack44::ortho(float left, float right, float bottom, float top, float near, float far) {
-    Matrix44* m = new Matrix44();
+    shared_ptr<Matrix44> m(new Matrix44);
     ::ortho(m->raw(), left, right, bottom, top, near, far);
-    mvp.push(*m);
+    mvp.push(m);
     return *this;
 }
 
 MatrixStack44& MatrixStack44::frustum(float left, float right, float bottom, float top, float near, float far) {
-    Matrix44* m = new Matrix44();
+    shared_ptr<Matrix44> m(new Matrix44());
     ::frustum(m->raw(), left, right, bottom, top, near, far);
-    mvp.push(*m);
+    mvp.push(m);
     return *this;
 }
 
 MatrixStack44& MatrixStack44::translate(float x, float y, float z) {
     Matrix44 translation;
     ::translate(translation.raw(), x, y, z);
-    Matrix44* m1 = new Matrix44();
-    multm(m1->raw(), mvp.top().raw(), translation.raw());
-    mvp.push(*m1);
-    Matrix44* m2 = new Matrix44();
-    multm(m2->raw(), mv.top().raw(), translation.raw());
-    mv.push(*m2);
+    shared_ptr<Matrix44> m1(new Matrix44());
+    multm(m1->raw(), mvp.top()->raw(), translation.raw());
+    mvp.push(m1);
+    shared_ptr<Matrix44> m2(new Matrix44());
+    multm(m2->raw(), mv.top()->raw(), translation.raw());
+    mv.push(m2);
     return *this;
 }
 
 MatrixStack44& MatrixStack44::rotate(float a, float x, float y, float z) {
     Matrix44 rotation;
     ::rotate(rotation.raw(), a, x, y, z);
-    Matrix44* m1 = new Matrix44();
-    multm(m1->raw(), mvp.top().raw(), rotation.raw());
-    mvp.push(*m1);
-    Matrix44* m2 = new Matrix44();
-    multm(m2->raw(), mv.top().raw(), rotation.raw());
-    mv.push(*m2);
+    shared_ptr<Matrix44> m1(new Matrix44());
+    multm(m1->raw(), mvp.top()->raw(), rotation.raw());
+    mvp.push(m1);
+    shared_ptr<Matrix44> m2(new Matrix44());
+    multm(m2->raw(), mv.top()->raw(), rotation.raw());
+    mv.push(m2);
     return *this;
 }
 
 Matrix44& MatrixStack44::modelViewProjection() {
-    return mvp.top();
+    return *mvp.top();
 }
 
 Matrix44& MatrixStack44::modelView() {
-    return mv.top();
+    return *mv.top();
 }
 
 void identity(matrix44 m) {
