@@ -14,25 +14,26 @@ all: $(EXECUTABLES)
 matrices.o: matrices.hpp
 files.o: files.h
 glutils.o: glutils.h
+glxwindow.o: glwindow.hpp glxwindow.hpp
 
 tutorial01: tutorial01.o
-	$(CXX) $(CXXFLAGS) $(LIBRARIES) -o $@ $<
+	$(CXX) $(CXXFLAGS) -o $@ $< $(LIBRARIES)
 
 tutorial02: tutorial02.o
-	$(CXX) $(CXXFLAGS) $(LIBRARIES) -o $@ $<
+	$(CXX) $(CXXFLAGS) -o $@ $< $(LIBRARIES)
 	
 tutorial03: tutorial03.o matrices.o files.o glutils.o
-	$(CXX) $(CXXFLAGS) $(LIBRARIES) -o $@ tutorial03.o matrices.o files.o glutils.o
+	$(CXX) $(CXXFLAGS) -o $@ tutorial03.o matrices.o files.o glutils.o $(LIBRARIES) 
 	
 tutorial04: tutorial04.o matrices.o files.o glutils.o utils.h
-	$(CXX) $(CXXFLAGS) $(LIBRARIES) -o $@ tutorial04.o matrices.o files.o glutils.o
+	$(CXX) $(CXXFLAGS) -o $@ tutorial04.o matrices.o files.o glutils.o $(LIBRARIES)
 	
 tutorial05: tutorial05.o matrices.o files.o glutils.o utils.h
-	$(CXX) $(CXXFLAGS) $(LIBRARIES) -o $@ tutorial05.o matrices.o files.o glutils.o
+	$(CXX) $(CXXFLAGS) -o $@ tutorial05.o matrices.o files.o glutils.o $(LIBRARIES)
 	
 tutorial06: tutorial06.o matrices.o files.o glutils.o utils.h torus.o torus.h
-	$(CXX) $(CXXFLAGS) $(LIBRARIES) -o $@ tutorial06.o matrices.o files.o glutils.o torus.o
-	
+	$(CXX) $(CXXFLAGS) -o $@ tutorial06.o matrices.o files.o glutils.o torus.o $(LIBRARIES)
+
 clean:
 	-rm *.o
 	-rm gmon.out

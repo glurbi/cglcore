@@ -16,7 +16,7 @@ MatrixStack44::MatrixStack44() {
 }
 
 MatrixStack44& MatrixStack44::identity() {
-    shared_ptr<Matrix44> m(new Matrix44());
+    boost::shared_ptr<Matrix44> m(new Matrix44());
     ::identity(m->raw());
     mvp.push(m);
     mv.push(m);
@@ -24,14 +24,14 @@ MatrixStack44& MatrixStack44::identity() {
 }
 
 MatrixStack44& MatrixStack44::ortho(float left, float right, float bottom, float top, float near, float far) {
-    shared_ptr<Matrix44> m(new Matrix44);
+    boost::shared_ptr<Matrix44> m(new Matrix44);
     ::ortho(m->raw(), left, right, bottom, top, near, far);
     mvp.push(m);
     return *this;
 }
 
 MatrixStack44& MatrixStack44::frustum(float left, float right, float bottom, float top, float near, float far) {
-    shared_ptr<Matrix44> m(new Matrix44());
+    boost::shared_ptr<Matrix44> m(new Matrix44());
     ::frustum(m->raw(), left, right, bottom, top, near, far);
     mvp.push(m);
     return *this;
@@ -40,10 +40,10 @@ MatrixStack44& MatrixStack44::frustum(float left, float right, float bottom, flo
 MatrixStack44& MatrixStack44::translate(float x, float y, float z) {
     Matrix44 translation;
     ::translate(translation.raw(), x, y, z);
-    shared_ptr<Matrix44> m1(new Matrix44());
+    boost::shared_ptr<Matrix44> m1(new Matrix44());
     multm(m1->raw(), mvp.top()->raw(), translation.raw());
     mvp.push(m1);
-    shared_ptr<Matrix44> m2(new Matrix44());
+    boost::shared_ptr<Matrix44> m2(new Matrix44());
     multm(m2->raw(), mv.top()->raw(), translation.raw());
     mv.push(m2);
     return *this;
@@ -52,10 +52,10 @@ MatrixStack44& MatrixStack44::translate(float x, float y, float z) {
 MatrixStack44& MatrixStack44::rotate(float a, float x, float y, float z) {
     Matrix44 rotation;
     ::rotate(rotation.raw(), a, x, y, z);
-    shared_ptr<Matrix44> m1(new Matrix44());
+    boost::shared_ptr<Matrix44> m1(new Matrix44());
     multm(m1->raw(), mvp.top()->raw(), rotation.raw());
     mvp.push(m1);
-    shared_ptr<Matrix44> m2(new Matrix44());
+    boost::shared_ptr<Matrix44> m2(new Matrix44());
     multm(m2->raw(), mv.top()->raw(), rotation.raw());
     mv.push(m2);
     return *this;
