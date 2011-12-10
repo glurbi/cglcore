@@ -1,6 +1,6 @@
 INCLUDE = -I/usr/include/ -I.
 LIBDIR  = -L/usr/X11R6/lib
-COMPILERFLAGS = -Wall -g -pg
+COMPILERFLAGS = -Wall -g -pg -std=c++0x
 CXX = g++
 CXXFLAGS = $(COMPILERFLAGS) $(INCLUDE)
 LIBRARIES = -lX11 -lglut -lGL -lGLEW -lpng
