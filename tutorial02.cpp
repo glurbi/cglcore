@@ -116,11 +116,11 @@ void renderQuad() {
     glDisableVertexAttribArray(POSITION_ATTRIBUTE_INDEX);
 }
 
-void reshapeFunc(int width, int height) {
+void reshape(int width, int height) {
     glViewport(0, 0, width, height);
 }
 
-void displayFunc() {
+void render() {
 
     if (initialized == false) {
         createProgram();
@@ -237,7 +237,7 @@ int main (int argc, char** argv) {
     swa.colormap = cmap = XCreateColormap(display, RootWindow(display, vi->screen), vi->visual, AllocNone);
     swa.background_pixmap = None;
     swa.border_pixel = 0;
-    swa.event_mask = StructureNotifyMask;
+    swa.event_mask = StructureNotifyMask | KeyPressMask;
     Window win = XCreateWindow(display, RootWindow(display, vi->screen), 0, 0, 800, 600,
         0, vi->depth, InputOutput, vi->visual, CWBorderPixel|CWColormap|CWEventMask, &swa);
     if (!win) {
@@ -289,10 +289,25 @@ int main (int argc, char** argv) {
     // must be called AFTER the OpenGL context has been created
     glewInit(); 
 
-    reshapeFunc(800, 600);
+    reshape(800, 600);
 
-    while (1) {
-        displayFunc();
+    bool done = false;
+    while (!done) {
+        while (XPending(display) > 0) {
+            XEvent event;
+            XNextEvent(display, &event);
+            switch (event.type) {
+            case Expose:
+                break;
+            case ConfigureNotify:
+                reshape(event.xconfigure.width, event.xconfigure.height);
+                break;
+            case KeyPress:
+                done = true;
+                break;
+            }
+        }
+        render();
         glXSwapBuffers(display, win);
     }
 
