@@ -8,19 +8,19 @@ EXECUTABLES = tutorial01 tutorial02 tutorial03 tutorial04 tutorial05 tutorial06
 
 all: $(EXECUTABLES)
 
-.c.o: 
-	$(CXX) $(CFLAGS) $(LIBDIR) –c $(.SOURCE) 
+#.c.o: 
+#	$(CXX) $(CFLAGS) $(LIBDIR) –c $(.SOURCE) 
 
 matrices.o: matrices.hpp
 files.o: files.h
 glutils.o: glutils.h
 glxwindow.o: glwindow.hpp glxwindow.hpp
 
-tutorial01: tutorial01.o
-	$(CXX) $(CXXFLAGS) -o $@ $< $(LIBRARIES)
+tutorial01: tutorial01.cpp
+	g++ -Wall -g -std=c++0x -o tutorial01 tutorial01.cpp -lX11 -lGL -lGLEW
 
-tutorial02: tutorial02.o
-	$(CXX) $(CXXFLAGS) -o $@ $< $(LIBRARIES)
+tutorial02: tutorial02.cpp
+	g++ -Wall -g -std=c++0x -o tutorial02 tutorial02.cpp -lX11 -lGL -lGLEW
 	
 tutorial03: tutorial03.o matrices.o files.o glutils.o
 	$(CXX) $(CXXFLAGS) -o $@ tutorial03.o matrices.o files.o glutils.o $(LIBRARIES) 
