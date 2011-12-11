@@ -19,7 +19,6 @@
 // following index...
 const int POSITION_ATTRIBUTE_INDEX = 0;
 
-int windowId; // the glut window id
 bool initialized; // have we initialized the buffer objects?
 GLuint trianglesId; // the triangles VBO id
 
@@ -53,13 +52,11 @@ void renderTriangles() {
     glDisableVertexAttribArray(POSITION_ATTRIBUTE_INDEX);
 }
 
-// glut callback invoked when the window is resized
-void reshapeFunc(int width, int height) {
+void reshape(int width, int height) {
     glViewport(0, 0, width, height);
 }
 
-// glut callback invoked each time the opengl buffer must be painted
-void displayFunc() {
+void render() {
 
     if (initialized == false) {
         createTriangles();
@@ -68,146 +65,186 @@ void displayFunc() {
 
     glClear(GL_COLOR_BUFFER_BIT);
     renderTriangles();
-//    glutSwapBuffers();
 }
 
-// glut callback invoked each time a key has been pressed
-void keyboardFunc(unsigned char key, int x, int y) {
-//    glutDestroyWindow(windowId);
-    exit(EXIT_SUCCESS);
-}
+typedef GLXContext (*glXCreateContextAttribsARBProc)(Display*, GLXFBConfig, GLXContext, Bool, const int*);
 
-static void make_window( Display *dpy, const char *name,
-             int x, int y, int width, int height,
-             Window *winRet, GLXContext *ctxRet)
-{
-   int attrib[] = { GLX_RGBA,
-            GLX_RED_SIZE, 1,
-            GLX_GREEN_SIZE, 1,
-            GLX_BLUE_SIZE, 1,
-            GLX_DOUBLEBUFFER,
-            GLX_DEPTH_SIZE, 1,
-            None };
-   int scrnum;
-   XSetWindowAttributes attr;
-   unsigned long mask;
-   Window root;
-   Window win;
-   GLXContext ctx;
-   XVisualInfo *visinfo;
+// Helper to check for extension string presence.  Adapted from:
+//   http://www.opengl.org/resources/features/OGLextensions/
+bool isExtensionSupported(const char *extList, const char *extension) {
 
-   scrnum = DefaultScreen( dpy );
-   root = RootWindow( dpy, scrnum );
+    const char *start;
+    const char *where, *terminator;
 
-   visinfo = glXChooseVisual( dpy, scrnum, attrib );
-   if (!visinfo) {
-      printf("Error: couldn't get an RGB, Double-buffered visual\n");
-      exit(1);
-   }
+    //Extension names should not have spaces.
+    where = strchr(extension, ' ');
+    if (where || *extension == '\0') {
+        return false;
+    }
 
-   /* window attributes */
-   attr.background_pixel = 0;
-   attr.border_pixel = 0;
-   attr.colormap = XCreateColormap( dpy, root, visinfo->visual, AllocNone);
-   attr.event_mask = StructureNotifyMask | ExposureMask | KeyPressMask;
-   mask = CWBackPixel | CWBorderPixel | CWColormap | CWEventMask;
+    // It takes a bit of care to be fool-proof about parsing the OpenGL extensions string.
+    // Don't be fooled by sub-strings, etc.
+    for (start = extList; ;) {
+        where = strstr(start, extension);
 
-   win = XCreateWindow( dpy, root, 0, 0, width, height,
-                0, visinfo->depth, InputOutput,
-                visinfo->visual, mask, &attr );
+        if (!where) {
+            break;
+        }
 
-   /* set hints and properties */
-   {
-      XSizeHints sizehints;
-      sizehints.x = x;
-      sizehints.y = y;
-      sizehints.width  = width;
-      sizehints.height = height;
-      sizehints.flags = USSize | USPosition;
-      XSetNormalHints(dpy, win, &sizehints);
-      XSetStandardProperties(dpy, win, name, name,
-                              None, (char **)NULL, 0, &sizehints);
-   }
+        terminator = where + strlen(extension);
 
-   ctx = glXCreateContext( dpy, visinfo, NULL, True );
-   if (!ctx) {
-      printf("Error: glXCreateContext failed\n");
-      exit(1);
-   }
-
-   XFree(visinfo);
-
-   *winRet = win;
-   *ctxRet = ctx;
-}
-
-static void
-event_loop(Display *dpy, Window win)
-{
-   while (1) {
-      while (XPending(dpy) > 0) {
-         XEvent event;
-         XNextEvent(dpy, &event);
-         switch (event.type) {
-     case Expose:
-            /* we'll redraw below */
-        break;
-     case ConfigureNotify:
-        reshapeFunc(event.xconfigure.width, event.xconfigure.height);
-        break;
-         case KeyPress:
-                     return;
+        if (where == start || *(where - 1) == ' ') {
+            if (*terminator == ' ' || *terminator == '\0') {
+                return true;
             }
-         }
-      }
+        }
 
-      displayFunc();
-      glXSwapBuffers(dpy, win);
+        start = terminator;
+    }
 
+    return false;
 }
 
-
-int main(int argc, char **argv) {
-	initialized = false;
-
-	Display *dpy;
-	Window win;
-	GLXContext ctx;
-	char *dpyName = NULL;
-	dpy = XOpenDisplay(dpyName);
-	if (!dpy) {
-	    printf("Error: couldn't open display %s\n", dpyName);
-	    return -1;
-	}
-
-	make_window(dpy, "glxgears", 0, 0, 800, 600, &win, &ctx);
-	XMapWindow(dpy, win);
-	glXMakeCurrent(dpy, win, ctx);
-	reshapeFunc(800, 600);
-	glewInit(); // must be called AFTER the OpenGL context has been created
-	            // i.e. after glutCreateWindow has been called
-
-//	init();
-	event_loop(dpy, win);
-
-	glXDestroyContext(dpy, ctx);
-	XDestroyWindow(dpy, win);
-	XCloseDisplay(dpy);
-
-//    glutInit(&argc, argv);
-//    glutInitContextVersion(3, 3);
-//    glutInitContextFlags(GLUT_FORWARD_COMPATIBLE);
-//    glutInitContextProfile(GLUT_CORE_PROFILE);
-//    glutInitDisplayMode(GLUT_RGBA | GLUT_DOUBLE);
-//    glutInitWindowSize(800, 600);
-//    glutInitWindowPosition(0, 0);
-//    windowId = glutCreateWindow("Tutorial 01");
-//    glewInit(); // must be called AFTER the OpenGL context has been created
-//				// i.e. after glutCreateWindow has been called
-//    glutDisplayFunc(&displayFunc);
-//    glutIdleFunc(&displayFunc);
-//    glutReshapeFunc(&reshapeFunc);
-//    glutKeyboardFunc(&keyboardFunc);
-//    glutMainLoop();
-    return EXIT_SUCCESS;
+bool ctxErrorOccurred = false;
+int ctxErrorHandler(Display* display, XErrorEvent* event) {
+    ctxErrorOccurred = true;
+    return 0;
 }
+
+// main method largely inspired from opengl wiki
+// http://www.opengl.org/wiki/Tutorial%3a_OpenGL_3.0_Context_Creation_%28GLX%29
+int main (int argc, char** argv) {
+
+    Display* display = XOpenDisplay(nullptr);
+    if (display == nullptr) {
+        printf("Failed to open X display\n");
+        exit(1);
+    }
+
+    int visual_attribs[] = {
+        GLX_RED_SIZE        , 8,
+        GLX_GREEN_SIZE      , 8,
+        GLX_BLUE_SIZE       , 8,
+        GLX_ALPHA_SIZE      , 8,
+        GLX_DEPTH_SIZE      , 24,
+        GLX_DOUBLEBUFFER    , True,
+        None
+    };
+
+    int glx_major, glx_minor;
+    if (!glXQueryVersion(display, &glx_major, &glx_minor) ||
+       ((glx_major == 1) && (glx_minor < 3)) || (glx_major < 1))
+    {
+        printf("Invalid GLX version");
+        exit(1);
+    }
+
+    int fbcount;
+    GLXFBConfig* fbc = glXChooseFBConfig(display, DefaultScreen(display), visual_attribs, &fbcount);
+    if (fbc == nullptr) {
+        printf("Failed to retrieve a framebuffer config\n");
+        exit(1);
+    }
+
+    // Pick the FB config/visual with the most samples per pixel
+    int best_fbc = -1, best_num_samp = -1;
+    for (int i = 0; i < fbcount; i++) {
+        XVisualInfo *vi = glXGetVisualFromFBConfig(display, fbc[i]);
+        if (vi != nullptr) {
+            int samp_buf, samples;
+            glXGetFBConfigAttrib(display, fbc[i], GLX_SAMPLE_BUFFERS, &samp_buf);
+            glXGetFBConfigAttrib(display, fbc[i], GLX_SAMPLES, &samples);
+            if (best_fbc < 0 || (samp_buf && samples > best_num_samp)) {
+                best_fbc = i, best_num_samp = samples;
+            }
+        }
+        XFree(vi);
+    }
+    GLXFBConfig bestFbc = fbc[best_fbc];
+    XFree(fbc);
+
+    XVisualInfo *vi = glXGetVisualFromFBConfig(display, bestFbc);
+    XSetWindowAttributes swa;
+    Colormap cmap;
+    swa.colormap = cmap = XCreateColormap(display, RootWindow(display, vi->screen), vi->visual, AllocNone);
+    swa.background_pixmap = None;
+    swa.border_pixel = 0;
+    swa.event_mask = StructureNotifyMask | KeyPressMask;
+    Window win = XCreateWindow(display, RootWindow(display, vi->screen), 0, 0, 800, 600,
+        0, vi->depth, InputOutput, vi->visual, CWBorderPixel|CWColormap|CWEventMask, &swa);
+    if (!win) {
+        printf("Failed to create window.\n");
+        exit(1);
+    }
+    XFree(vi);
+
+    XStoreName(display, win, "Tutorial 02");
+    XMapWindow(display, win);
+
+    // Get the default screen's GLX extension list
+    const char *glxExts = glXQueryExtensionsString(display, DefaultScreen(display));
+    glXCreateContextAttribsARBProc glXCreateContextAttribsARB = 0;
+    glXCreateContextAttribsARB = (glXCreateContextAttribsARBProc) glXGetProcAddressARB((const GLubyte *) "glXCreateContextAttribsARB");
+
+    GLXContext ctx = nullptr;
+
+    // Install an X error handler so the application won't exit if GL 3.0
+    // context allocation fails.
+    ctxErrorOccurred = false;
+    int (*oldHandler)(Display*, XErrorEvent*) = XSetErrorHandler(&ctxErrorHandler);
+
+    // Check for the GLX_ARB_create_context extension string and the function.
+    if (isExtensionSupported(glxExts, "GLX_ARB_create_context") && glXCreateContextAttribsARB) {
+        int context_attribs[] = {
+            GLX_CONTEXT_MAJOR_VERSION_ARB, 3,
+            GLX_CONTEXT_MINOR_VERSION_ARB, 1,
+            None
+        };
+        ctx = glXCreateContextAttribsARB(display, bestFbc, 0, True, context_attribs);
+
+        // Sync to ensure any errors generated are processed.
+        XSync(display, False);
+        if (ctxErrorOccurred || ctx == nullptr) {
+            printf("Could not create GL 3.0 context\n");
+            exit(1);
+        }
+    }
+
+    // Sync to ensure any errors generated are processed.
+    XSync(display, False);
+    // Restore the original error handler
+    XSetErrorHandler(oldHandler);
+
+    glXMakeCurrent(display, win, ctx);
+
+    // must be called AFTER the OpenGL context has been created
+    glewInit(); 
+
+    reshape(800, 600);
+
+    bool done = false;
+    while (!done) {
+        while (XPending(display) > 0) {
+            XEvent event;
+            XNextEvent(display, &event);
+            switch (event.type) {
+            case Expose:
+                break;
+            case ConfigureNotify:
+                reshape(event.xconfigure.width, event.xconfigure.height);
+                break;
+            case KeyPress:
+                done = true;
+                break;
+            }
+        }
+        render();
+        glXSwapBuffers(display, win);
+    }
+
+    glXDestroyContext(display, ctx);
+    XDestroyWindow(display, win);
+    XFreeColormap(display, cmap);
+    XCloseDisplay(display);
+}
+

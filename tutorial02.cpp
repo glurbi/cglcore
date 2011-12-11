@@ -10,7 +10,7 @@
 
 //
 // In this tutorial, we render a triangle and a quad using a shader program
-// that forwards the vertex position without tranformation  and invents some
+// that forwards the vertex position without tranformation and invents some
 // fragment color by using the vertex position.
 //
 
@@ -262,7 +262,6 @@ int main (int argc, char** argv) {
     int (*oldHandler)(Display*, XErrorEvent*) = XSetErrorHandler(&ctxErrorHandler);
 
     // Check for the GLX_ARB_create_context extension string and the function.
-    // If either is not present, use GLX 1.3 context creation method.
     if (isExtensionSupported(glxExts, "GLX_ARB_create_context") && glXCreateContextAttribsARB) {
         int context_attribs[] = {
             GLX_CONTEXT_MAJOR_VERSION_ARB, 3,
