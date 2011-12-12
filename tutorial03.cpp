@@ -1,8 +1,8 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
+#include <SDL/SDL.h>
 #include <GL/glew.h>
-#include <GL/freeglut.h>
 #include <matrices.hpp>
 #include <files.h>
 #include <glutils.h>
@@ -24,8 +24,6 @@ const float bottom = -1.5f;
 const float top = 1.5f;
 const float nearPlane = 1.0f;
 const float farPlane = -1.0f;
-
-int windowId; // the glut window id
 
 bool initialized = false;
 GLuint trianglesId;
@@ -99,13 +97,13 @@ void renderQuad() {
     glDisableVertexAttribArray(POSITION_ATTRIBUTE_INDEX);
 }
 
-void reshapeFunc(int width, int height) {
+void reshape(int width, int height) {
     glViewport(0, 0, width, height);
     // we keep track of the aspect ratio to adjust the projection volume
     aspectRatio = 1.0f * width / height;
 }
 
-void displayFunc() {
+void render() {
 
     if (initialized == false) {
         createProgram();
@@ -114,8 +112,8 @@ void displayFunc() {
         initialized = true;
     }
 
-	glEnable (GL_BLEND);
-	glBlendFunc (GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
+	glEnable(GL_BLEND);
+	glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
     glClear(GL_COLOR_BUFFER_BIT);
     glUseProgram(programId);
 
@@ -137,28 +135,48 @@ void displayFunc() {
     glUniform4f(color, 0.2f, 0.2f, 1.0f, 0.7f);
     renderQuad();
 
-    glutSwapBuffers();
-}
-
-void keyboardFunc(unsigned char key, int x, int y) {
-    glutDestroyWindow(windowId);
-    exit(EXIT_SUCCESS);
+    SDL_GL_SwapBuffers();
 }
 
 int main(int argc, char **argv) {
-    glutInit(&argc, argv);
-    glutInitContextVersion(3, 3);
-    glutInitContextFlags(GLUT_FORWARD_COMPATIBLE);
-    glutInitContextProfile(GLUT_CORE_PROFILE);
-    glutInitDisplayMode(GLUT_RGBA | GLUT_DOUBLE);
-    glutInitWindowSize(800, 600);
-    glutInitWindowPosition(0, 0);
-    windowId = glutCreateWindow("Tutorial 03");
+
+    if(SDL_Init(SDL_INIT_EVERYTHING) < 0) {
+        printf("SDL could not initialize.");
+        return 1;
+    }
+
+    SDL_GL_SetAttribute(SDL_GL_RED_SIZE, 8);
+    SDL_GL_SetAttribute(SDL_GL_GREEN_SIZE, 8);
+    SDL_GL_SetAttribute(SDL_GL_BLUE_SIZE, 8);
+    SDL_GL_SetAttribute(SDL_GL_ALPHA_SIZE, 8);
+
+    SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 16);
+    SDL_GL_SetAttribute(SDL_GL_BUFFER_SIZE, 32);
+
+    SDL_GL_SetAttribute(SDL_GL_MULTISAMPLEBUFFERS,  1);
+    SDL_GL_SetAttribute(SDL_GL_MULTISAMPLESAMPLES,  2);
+
+    SDL_Surface* surfDisplay = SDL_SetVideoMode(800, 600, 32, SDL_HWSURFACE | SDL_GL_DOUBLEBUFFER | SDL_OPENGL);
+    if (surfDisplay == nullptr) {
+        printf("Could not create SDL_Surface.");
+        return 1;
+    }
+
     glewInit(); // must be called AFTER the OpenGL context has been created
-    glutDisplayFunc(&displayFunc);
-    glutIdleFunc(&displayFunc);
-    glutReshapeFunc(&reshapeFunc);
-    glutKeyboardFunc(&keyboardFunc);
-    glutMainLoop();
-    return EXIT_SUCCESS;
+    reshape(800, 600);
+
+    SDL_Event event;
+    bool done = false;
+    while (!done) {
+        while (SDL_PollEvent(&event)) {
+            if (event.type == SDL_QUIT) {
+                done = true;
+            }
+        }
+        render();
+    }
+
+    SDL_FreeSurface(surfDisplay);
+    SDL_Quit();
+    return 0;
 }
