@@ -1,11 +1,9 @@
+#include <sys/stat.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
 #include <SDL/SDL.h>
 #include <GL/glew.h>
-#include <matrices.hpp>
-#include <files.h>
-#include <glutils.h>
 
 /*
  * In this tutorial, we render a triangle and a quad that overlap. It uses some
@@ -13,6 +11,8 @@
  * color of the geometries. In addition, the vertex positions are transformed
  * using an orthographic projection.
  */
+
+typedef float matrix44[16];
 
 // Up to 16 attributes per vertex is allowed so any value between 0 and 15 will do.
 const int POSITION_ATTRIBUTE_INDEX = 0;
@@ -30,6 +30,65 @@ GLuint trianglesId;
 GLuint quadId;
 GLuint programId;
 float aspectRatio;
+
+void ortho(matrix44 m, float left, float right, float bottom, float top, float near, float far) {
+    m[0] = 2 / (right - left);
+    m[1] = 0.0f;
+    m[2] = 0.0f;
+    m[3] = 0.0f;
+    m[4] = 0.0f;
+    m[5] = 2 / (top - bottom);
+    m[6] = 0.0f;
+    m[7] = 0.0f;
+    m[8] = 0.0f;
+    m[9] = 0.0f;
+    m[10] = 2 / (far - near);
+    m[11] = 0.0f;
+    m[12] = -(right + left) / (right - left);
+    m[13] = -(top + bottom) / (top - bottom);
+    m[14] = -(far + near) / (far - near);
+    m[15] = 1.0f;
+}
+
+char* readTextFile(const char* filename) {
+    struct stat st;
+    stat(filename, &st);
+    int size = st.st_size;
+    char* content = (char*) malloc((size+1)*sizeof(char));
+    content[size] = 0;
+    // we need to read as binary, not text, otherwise we are screwed on Windows
+    FILE *file = fopen(filename, "rb");
+    fread(content, 1, size, file);
+    return content;
+}
+
+void checkShaderCompileStatus(GLuint shaderId) {
+    GLint compileStatus;
+    glGetShaderiv(shaderId, GL_COMPILE_STATUS, &compileStatus);
+    if (compileStatus == GL_FALSE) {
+        GLint infoLogLength;
+        glGetShaderiv(shaderId, GL_INFO_LOG_LENGTH, &infoLogLength);
+        printf("Shader compilation failed...\n");
+        char* log = (char*) malloc((1+infoLogLength)*sizeof(char));
+        glGetShaderInfoLog(shaderId, infoLogLength, NULL, log);
+        log[infoLogLength] = 0;
+        printf("%s", log);
+    }
+}
+
+void checkProgramLinkStatus(GLuint programId) {
+    GLint linkStatus;
+    glGetProgramiv(programId, GL_LINK_STATUS, &linkStatus);
+    if (linkStatus == GL_FALSE) {
+        GLint infoLogLength;
+        glGetProgramiv(programId, GL_INFO_LOG_LENGTH, &infoLogLength);
+        printf("Program link failed...\n");
+        char* log = (char*) malloc((1+infoLogLength)*sizeof(char));
+        glGetProgramInfoLog(programId, infoLogLength, NULL, log);
+        log[infoLogLength] = 0;
+        printf("%s", log);
+    }
+}
 
 void createProgram() {
     const GLchar* vertexShaderSource = readTextFile("tutorial03.vert");

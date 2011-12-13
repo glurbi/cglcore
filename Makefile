@@ -23,7 +23,7 @@ tutorial02: tutorial02.cpp
 	g++ -Wall -g -std=c++0x -o tutorial02 tutorial02.cpp -lX11 -lGL -lGLEW
 	
 tutorial03: tutorial03.o matrices.o files.o glutils.o
-	g++ -Wall -g -std=c++0x -I. -o tutorial03 tutorial03.o matrices.o files.o glutils.o -lX11 -lGL -lGLEW -lSDL -lpng
+	g++ -Wall -g -std=c++0x -I. -o tutorial03 tutorial03.cpp -lX11 -lGL -lGLEW -lSDL
 	
 tutorial04: tutorial04.o matrices.o files.o glutils.o utils.h
 	$(CXX) $(CXXFLAGS) -o $@ tutorial04.o matrices.o files.o glutils.o $(LIBRARIES)
