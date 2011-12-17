@@ -344,7 +344,6 @@ void render() {
         lastTimerCall = now;
     }
 
-
     glClear(GL_COLOR_BUFFER_BIT);
     glEnable(GL_CULL_FACE);
     glUseProgram(programId);

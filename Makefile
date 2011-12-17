@@ -28,8 +28,9 @@ tutorial03: tutorial03.cpp
 tutorial04: tutorial04.cpp
 	g++ -Wall -g -std=c++0x -o tutorial04 tutorial04.cpp -lX11 -lGL -lGLEW -lSDL
 	
-tutorial05: tutorial05.o matrices.o files.o glutils.o utils.h
-	$(CXX) $(CXXFLAGS) -o $@ tutorial05.o matrices.o files.o glutils.o $(LIBRARIES)
+tutorial05: tutorial05.cpp
+	g++ -Wall -g -std=c++0x $(shell pkg-config --cflags gtk+-2.0 gtkgl-2.0 gtkglext-1.0) \
+	    -o tutorial05 tutorial05.cpp $(shell pkg-config --libs gtk+-2.0 gtkgl-2.0 gtkglext-1.0) -lGLEW
 	
 tutorial06: tutorial06.o matrices.o files.o glutils.o utils.h torus.o torus.h
 	$(CXX) $(CXXFLAGS) -o $@ tutorial06.o matrices.o files.o glutils.o torus.o $(LIBRARIES)
