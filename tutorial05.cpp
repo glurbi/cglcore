@@ -77,6 +77,20 @@ void checkShaderCompileStatus(GLuint shaderId) {
     }
 }
 
+void checkProgramLinkStatus(GLuint programId) {
+    GLint linkStatus;
+    glGetProgramiv(programId, GL_LINK_STATUS, &linkStatus);
+    if (linkStatus == GL_FALSE) {
+        GLint infoLogLength;
+        glGetProgramiv(programId, GL_INFO_LOG_LENGTH, &infoLogLength);
+        printf("Program link failed...\n");
+        char* log = (char*) malloc((1+infoLogLength)*sizeof(char));
+        glGetProgramInfoLog(programId, infoLogLength, NULL, log);
+        log[infoLogLength] = 0;
+        printf("%s", log);
+    }
+}
+
 char* readPngFile(const char* filename, int *width, int *height, GLenum *format) {
     FILE *fp;
     png_structp png_ptr;
@@ -116,16 +130,6 @@ char* readPngFile(const char* filename, int *width, int *height, GLenum *format)
     free(row_pointers);
     fclose(fp);
     return (char*) image_data;
-}
-
-void identity(matrix44 m) {
-    for (int i = 0; i < 16; i++) {
-        m[i] = 0.0f;
-    }
-    m[0] = 1.0f;
-    m[5] = 1.0f;
-    m[10] = 1.0f;
-    m[15] = 1.0f;
 }
 
 void frustum(matrix44 m, float left, float right, float bottom, float top, float near, float far) {
@@ -196,20 +200,6 @@ void multm(matrix44 m, matrix44 m1, matrix44 m2) {
                 m1[i+8] * m2[j*4+2] +
                 m1[i+12] * m2[j*4+3];
         }
-    }
-}
-
-void checkProgramLinkStatus(GLuint programId) {
-    GLint linkStatus;
-    glGetProgramiv(programId, GL_LINK_STATUS, &linkStatus);
-    if (linkStatus == GL_FALSE) {
-        GLint infoLogLength;
-        glGetProgramiv(programId, GL_INFO_LOG_LENGTH, &infoLogLength);
-        printf("Program link failed...\n");
-        char* log = (char*) malloc((1+infoLogLength)*sizeof(char));
-        glGetProgramInfoLog(programId, infoLogLength, NULL, log);
-        log[infoLogLength] = 0;
-        printf("%s", log);
     }
 }
 
@@ -426,7 +416,7 @@ gboolean reshape(GtkWidget* widget, GdkEventConfigure* event, gpointer data) {
 // thanks to http://openglbook.com/the-book/chapter-1-getting-started/#toc-measuring-performance
 void timer(int value) {
     char title[512];
-    sprintf(title, "Tutorial05: %d FPS @ %d x %d", frameCount * 4, currentWidth, currentHeight);
+    sprintf(title, "Tutorial05: %d FPS @ %d x %d", frameCount, currentWidth, currentHeight);
     gtk_window_set_title(GTK_WINDOW(window), title);
     frameCount = 0;
 }
@@ -437,6 +427,7 @@ gboolean draw(GtkWidget* widget, GdkEventExpose* event, gpointer data) {
     static GdkGLDrawable* gldrawable;
 
     if (initialized == false) {
+
         glcontext = gtk_widget_get_gl_context(widget);
         gldrawable = gtk_widget_get_gl_drawable (widget);
         gdk_gl_drawable_gl_begin(gldrawable, glcontext);
@@ -458,7 +449,7 @@ gboolean draw(GtkWidget* widget, GdkEventExpose* event, gpointer data) {
     long now = currentTimeMillis();
     long elapsed = now - startTimeMillis;
     static long lastTimerCall = 0;
-    if ((now - lastTimerCall) > 250) {
+    if ((now - lastTimerCall) > 1000) {
         timer(0);
         lastTimerCall = now;
     }
