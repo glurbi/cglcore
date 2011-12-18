@@ -4,15 +4,13 @@
 #include <string.h>
 #include <time.h>
 #include <math.h>
-#include <png.h>
+#include <SDL/SDL.h>
 #include <GL/glew.h>
-#include <gtk/gtk.h>
-#include <gdk/gdkkeysyms.h>
-#include <gtk/gtkgl.h>
+#include <GL/glxew.h>
 
 /*
  * In this tutorial, we render a rotating torus with ambient, diffuse and
- * specular light component, using Gouraud lighting (per vertex lighting).
+ * specular light component, using Phong lighting (per vertex lighting).
  */
 
 typedef float matrix44[16];
@@ -24,7 +22,7 @@ inline float toRadians(float degrees) { return degrees * pi / 180.0f; }
 // determines the number of vertices in the torus
 int n = 40;
 
-inline int torusAttributeCount(int n) { return n * n * 6;}
+inline int torusAttributeCount(int n) { return n * n * 6; }
 
 // Up to 16 attributes per vertex is allowed so any value between 0 and 15 will do.
 const int POSITION_ATTRIBUTE_INDEX = 0;
@@ -37,9 +35,6 @@ const float bottom = -1.0f;
 const float top = 1.0f;
 const float nearPlane = 2.0f;
 const float farPlane = 10.0f;
-
-GtkWidget *window;
-guint idle_id = 0;
 
 bool initialized = false;
 long startTimeMillis;
@@ -165,14 +160,14 @@ void multm(matrix44 m, matrix44 m1, matrix44 m2) {
 }
 
 void createProgram() {
-    const GLchar* vertexShaderSource = readTextFile("tutorial06.vert");
+    const GLchar* vertexShaderSource = readTextFile("tutorial07.vert");
     int vertexShaderSourceLength = strlen(vertexShaderSource);
     GLuint vertexShaderId = glCreateShader(GL_VERTEX_SHADER);
     glShaderSource(vertexShaderId, 1, &vertexShaderSource, &vertexShaderSourceLength);
     glCompileShader(vertexShaderId);
 	checkShaderCompileStatus(vertexShaderId);
 
-    const GLchar* fragmentShaderSource = readTextFile("tutorial06.frag");
+    const GLchar* fragmentShaderSource = readTextFile("tutorial07.frag");
     int fragmentShaderSourceLength = strlen(fragmentShaderSource);
     GLuint fragmentShaderId = glCreateShader(GL_FRAGMENT_SHADER);
     glShaderSource(fragmentShaderId, 1, &fragmentShaderSource, &fragmentShaderSourceLength);
@@ -290,37 +285,25 @@ void renderTorus() {
     glBindBuffer(GL_ARRAY_BUFFER, 0);
 }
 
-gboolean reshape(GtkWidget* widget, GdkEventConfigure* event, gpointer data) {
-    int width = widget->allocation.width;
-    int height = widget->allocation.height;
+void reshape(int width, int height) {
     glViewport(0, 0, width, height);
     // we keep track of the aspect ratio to adjust the projection volume
     aspectRatio = 1.0f * width / height;
     currentWidth = width;
     currentHeight = height;
-    return TRUE;
 }
 
 // thanks to http://openglbook.com/the-book/chapter-1-getting-started/#toc-measuring-performance
 void timer(int value) {
     char title[512];
-    sprintf(title, "Tutorial06: %d FPS @ %d x %d", frameCount, currentWidth, currentHeight);
-    gtk_window_set_title(GTK_WINDOW(window), title);
+    sprintf(title, "Tutorial07: %d FPS @ %d x %d", frameCount * 4, currentWidth, currentHeight);
+    SDL_WM_SetCaption(title, title);
     frameCount = 0;
 }
 
-gboolean draw(GtkWidget* widget, GdkEventExpose* event, gpointer data) {
-
-    static GdkGLContext* glcontext;
-    static GdkGLDrawable* gldrawable;
+void render() {
 
     if (initialized == false) {
-
-        glcontext = gtk_widget_get_gl_context(widget);
-        gldrawable = gtk_widget_get_gl_drawable (widget);
-        gdk_gl_drawable_gl_begin(gldrawable, glcontext);
-        glewInit(); // must be called AFTER the OpenGL context has been created
-
         glEnable(GL_CULL_FACE);
         glEnable(GL_DEPTH_TEST);
         torusPositionsId = createTorusPositions(n, 0.3f, 1.0f);
@@ -335,7 +318,7 @@ gboolean draw(GtkWidget* widget, GdkEventExpose* event, gpointer data) {
     long now = currentTimeMillis();
     long elapsed = now - startTimeMillis;
     static long lastTimerCall = 0;
-    if ((now - lastTimerCall) > 1000) {
+    if ((now - lastTimerCall) > 250) {
         timer(0);
         lastTimerCall = now;
     }
@@ -364,80 +347,46 @@ gboolean draw(GtkWidget* widget, GdkEventExpose* event, gpointer data) {
     glUniformMatrix4fv(mvpMatrixUniform, 1, false, mvp);
     glUniformMatrix4fv(mvMatrixUniform, 1, false, mv);
     glUniform3f(lightDirUniform, 1.0f, -1.0f, -1.0f);
-    glUniform4f(colorUniform, 0.8f, 0.0f, 0.0f, 1.0f);
+    glUniform4f(colorUniform, 0.0f, 0.8f, 0.0f, 1.0f);
     glUniform4f(ambientUniform, 0.1f, 0.1f, 0.1f, 1.0f);
 
     // render!
     renderTorus();
 
     // display rendering buffer
-    gdk_gl_drawable_swap_buffers(gldrawable);
-    return TRUE;
-}
-
-gboolean idle(GtkWidget* widget) {
-    gdk_window_invalidate_rect(widget->window, &widget->allocation, FALSE);
-    gdk_window_process_updates(widget->window, FALSE);
-    return TRUE;
-}
-
-void idle_add(GtkWidget* widget) {
-    if (idle_id == 0) {
-        idle_id = g_idle_add_full(GDK_PRIORITY_REDRAW, (GSourceFunc) idle, widget, NULL);
-    }
-}
-
-void idle_remove(GtkWidget* widget) {
-    if (idle_id != 0) {
-        g_source_remove(idle_id);
-        idle_id = 0;
-    }
-}
-
-gboolean map(GtkWidget* widget, GdkEventAny* event, gpointer data) {
-    idle_add(widget);
-    return TRUE;
-}
-
-gboolean unmap(GtkWidget* widget, GdkEventAny* event, gpointer data) {
-    idle_remove(widget);
-    return TRUE;
-}
-
-gboolean key(GtkWidget* widget, GdkEventKey* event, gpointer data) {
-    GdkGLDrawable* gldrawable = gtk_widget_get_gl_drawable(widget);
-    gdk_gl_drawable_gl_end(gldrawable);
-    exit(0);
+    SDL_GL_SwapBuffers();
 }
 
 int main(int argc, char **argv) {
 
-    GdkGLConfig* glconfig;
-    GtkWidget* drawing_area;
+    SDL_Init(SDL_INIT_EVERYTHING);
+    SDL_GL_SetAttribute(SDL_GL_RED_SIZE, 8);
+    SDL_GL_SetAttribute(SDL_GL_GREEN_SIZE, 8);
+    SDL_GL_SetAttribute(SDL_GL_BLUE_SIZE, 8);
+    SDL_GL_SetAttribute(SDL_GL_ALPHA_SIZE, 8);
+    SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 16);
+    SDL_GL_SetAttribute(SDL_GL_BUFFER_SIZE, 32);
+    SDL_GL_SetAttribute(SDL_GL_MULTISAMPLEBUFFERS,  1);
+    SDL_GL_SetAttribute(SDL_GL_MULTISAMPLESAMPLES,  2);
+    SDL_Surface* surfDisplay = SDL_SetVideoMode(800, 600, 32,
+            SDL_HWSURFACE | SDL_GL_DOUBLEBUFFER | SDL_OPENGL);
 
-    gtk_init(&argc, &argv);
-    gtk_gl_init(&argc, &argv);
+    // must be called AFTER the OpenGL context has been created
+    glewInit();
+    reshape(800, 600);
 
-    glconfig = gdk_gl_config_new_by_mode((GdkGLConfigMode)
-            (GDK_GL_MODE_RGB | GDK_GL_MODE_DEPTH | GDK_GL_MODE_DOUBLE | GDK_GL_MODE_MULTISAMPLE));
+    SDL_Event event;
+    bool done = false;
+    while (!done) {
+        while (SDL_PollEvent(&event)) {
+            if (event.type == SDL_QUIT) {
+                done = true;
+            }
+        }
+        render();
+    }
 
-    window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
-    gtk_container_set_reallocate_redraws(GTK_CONTAINER(window), TRUE);
-    drawing_area = gtk_drawing_area_new();
-    gtk_container_add(GTK_CONTAINER(window), drawing_area);
-    gtk_widget_set_size_request(drawing_area, 800, 600);
-    gtk_widget_set_gl_capability(drawing_area, glconfig, NULL, TRUE, GDK_GL_RGBA_TYPE);
-    gtk_widget_add_events(drawing_area, GDK_VISIBILITY_NOTIFY_MASK);
-
-    g_signal_connect(G_OBJECT(window), "delete_event", G_CALLBACK(gtk_main_quit), NULL);
-    g_signal_connect(G_OBJECT(drawing_area), "configure_event", G_CALLBACK(reshape), NULL);
-    g_signal_connect(G_OBJECT(drawing_area), "expose_event", G_CALLBACK(draw), NULL);
-    g_signal_connect_swapped(G_OBJECT(window), "key_press_event", G_CALLBACK(key), drawing_area);
-    g_signal_connect(G_OBJECT(drawing_area), "map_event", G_CALLBACK(map), NULL);
-    g_signal_connect(G_OBJECT(drawing_area), "unmap_event", G_CALLBACK(unmap), NULL);
-
-    gtk_widget_show(drawing_area);
-    gtk_widget_show(window);
-    gtk_main();
+    SDL_FreeSurface(surfDisplay);
+    SDL_Quit();
     return 0;
 }

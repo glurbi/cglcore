@@ -31,8 +31,6 @@ const float top = 1.5f;
 const float nearPlane = 1.0f;
 const float farPlane = 10.0f;
 
-int windowId; // the glut window id
-
 bool initialized = false;
 long startTimeMillis;
 GLuint cubePositionsId;
