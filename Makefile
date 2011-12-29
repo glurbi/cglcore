@@ -1,4 +1,4 @@
-EXECUTABLES = tutorial01 tutorial02 tutorial03 tutorial04 tutorial05 tutorial06 tutorial07
+EXECUTABLES = tutorial01 tutorial02 tutorial03 tutorial04 tutorial05 tutorial06 tutorial07 tutorial08
 
 all: $(EXECUTABLES)
 
@@ -24,6 +24,9 @@ tutorial06: tutorial06.cpp
 
 tutorial07: tutorial07.cpp
 	g++ -Wall -g -std=c++0x -o tutorial07 tutorial07.cpp -lX11 -lGL -lGLEW -lSDL
+	
+tutorial08: tutorial08.cpp
+	g++ -Wall -g -std=c++0x -o tutorial08 tutorial08.cpp -lX11 -lGL -lGLEW -lSDL
 	
 clean:
 	-rm $(EXECUTABLES)
