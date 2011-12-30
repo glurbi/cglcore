@@ -20,6 +20,11 @@ class vector3 {
 public:
     vector3(float x, float y, float z): x(x), y(y), z(z) {}
     void dump(float** p) { (*p)[0] = x; (*p)[1] = y; (*p)[2] = z; *p += 3; }
+    vector3 normalize() {
+        float norm = sqrt(x*x + y*y + z*z);
+        return vector3(x / norm, y / norm, z / norm);
+    }
+
     float x, y, z;
 };
 
@@ -39,7 +44,7 @@ const float pi = atan(1.0f) * 4.0f;
 inline float toRadians(float degrees) { return degrees * pi / 180.0f; }
 
 // determines the number iterations for
-int n = 0;
+int n = 4;
 
 inline int sphereAttributeCount(int n) { return 8 * pow(4, n) * 3; }
 
@@ -182,7 +187,13 @@ void refine(int depth, triangle t, float** p) {
     if (depth == n) {
         t.dump(p);
     } else {
-//        refine(depth + 1, t)
+        vector3 m1 = midPoint(t.p2, t.p3).normalize();
+        vector3 m2 = midPoint(t.p3, t.p1).normalize();
+        vector3 m3 = midPoint(t.p1, t.p2).normalize();
+        refine(depth + 1, triangle(t.p1, m3, m2), p);
+        refine(depth + 1, triangle(m3, t.p2, m1), p);
+        refine(depth + 1, triangle(m1, m2, m3), p);
+        refine(depth + 1, triangle(m2, m1, t.p3), p);
     }
 }
 
@@ -344,7 +355,10 @@ int main(int argc, char **argv) {
     bool done = false;
     while (!done) {
         while (SDL_PollEvent(&event)) {
-            if (event.type == SDL_QUIT) {
+            if (event.type == SDL_QUIT ||
+                event.type == SDL_KEYDOWN ||
+                event.type == SDL_KEYUP)
+            {
                 done = true;
             }
         }
