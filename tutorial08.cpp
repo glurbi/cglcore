@@ -72,6 +72,8 @@ int totalFrameCount;
 int currentWidth;
 int currentHeight;
 
+float* positions;
+
 char* readTextFile(const char* filename) {
     struct stat st;
     stat(filename, &st);
@@ -200,7 +202,7 @@ void refine(int depth, triangle t, float** p) {
 GLuint createSpherePositions() {
     int nfloats = sphereAttributeCount(n)*3; // number of floats in the buffer
     int bufferSize = nfloats*sizeof(float);
-    float* positions = (float*) malloc(bufferSize);
+    positions = (float*) malloc(bufferSize);
     float* p = positions;
     GLuint spherePositionsId;
 
@@ -220,8 +222,32 @@ GLuint createSpherePositions() {
     glGenBuffers(1, &spherePositionsId);
     glBindBuffer(GL_ARRAY_BUFFER, spherePositionsId);
     glBufferData(GL_ARRAY_BUFFER, nfloats*sizeof(float), positions, GL_STATIC_DRAW);
-    free(positions);
+    //free(positions);
     return spherePositionsId;
+}
+
+GLuint createSphereNormals(float* positions) {
+    int nfloats = sphereAttributeCount(n)*3; // number of floats in the buffer
+    int bufferSize = nfloats*sizeof(float);
+    float* normals = (float*) malloc(bufferSize);
+    float* n = normals;
+    float* p = positions;
+    GLuint sphereNormalsId;
+
+    for (int i = 0; i < nfloats; i+=9) {
+        float nx = (p[i+0] + p[i+3] + p[i+6]) / 3;
+        float ny = (p[i+1] + p[i+4] + p[i+7]) / 3;
+        float nz = (p[i+2] + p[i+5] + p[i+8]) / 3;
+        n[i+0] = n[i+3] = n[i+6] = nx;
+        n[i+1] = n[i+4] = n[i+7] = ny;
+        n[i+2] = n[i+5] = n[i+8] = nz;
+    }
+
+    glGenBuffers(1, &sphereNormalsId);
+    glBindBuffer(GL_ARRAY_BUFFER, sphereNormalsId);
+    glBufferData(GL_ARRAY_BUFFER, nfloats*sizeof(float), normals, GL_STATIC_DRAW);
+    free(normals);
+    return sphereNormalsId;
 }
 
 void createProgram() {
@@ -283,7 +309,7 @@ void render() {
         glEnable(GL_CULL_FACE);
         glEnable(GL_DEPTH_TEST);
         spherePositionsId = createSpherePositions();
-        sphereNormalsId = spherePositionsId;
+        sphereNormalsId = createSphereNormals(positions);
         createProgram();
         startTimeMillis = currentTimeMillis();
         initialized = true;
@@ -307,7 +333,7 @@ void render() {
     //
     matrix44 tmp, mv, mvp, frustumMat, translateMat, rotateMat1, rotateMat2;
     frustum(frustumMat, left, right, bottom / aspectRatio, top / aspectRatio, nearPlane, farPlane);
-    translate(translateMat, 0.0f, 0.0f, -5.0f);
+    translate(translateMat, 0.0f, 0.0f, -3.0f);
     rotate(rotateMat1, 1.0f * elapsed / 50, 1.0f, 0.0f, 0.0f);
     rotate(rotateMat2, 1.0f * elapsed / 100, 0.0f, 1.0f, 0.0f);
     multm(tmp, rotateMat1, rotateMat2);
@@ -344,12 +370,12 @@ int main(int argc, char **argv) {
     SDL_GL_SetAttribute(SDL_GL_BUFFER_SIZE, 32);
     SDL_GL_SetAttribute(SDL_GL_MULTISAMPLEBUFFERS,  1);
     SDL_GL_SetAttribute(SDL_GL_MULTISAMPLESAMPLES,  2);
-    SDL_Surface* surfDisplay = SDL_SetVideoMode(800, 600, 32,
+    SDL_Surface* surfDisplay = SDL_SetVideoMode(900, 900, 32,
             SDL_HWSURFACE | SDL_GL_DOUBLEBUFFER | SDL_OPENGL);
 
     // must be called AFTER the OpenGL context has been created
     glewInit();
-    reshape(800, 600);
+    reshape(900, 900);
 
     SDL_Event event;
     bool done = false;

@@ -23,7 +23,7 @@ void main(void)
 
     /* We compute the reflection to get the specular component */
     vec3 reflection = normalize(reflect(lightDir, normalEye));
-    float specFactor = pow(max(0.0f, dot(normalEye, reflection)), 64.0f);
+    float specFactor = pow(max(0.0f, dot(normalEye, reflection)), 128.0f);
     vec4 specular = specFactor * vec4(1.0f, 1.0f, 1.0f, 1.0f);
     
     vColor =  ambient + diffuse + specular;
