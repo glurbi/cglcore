@@ -15,7 +15,7 @@
 //
 
 // Up to 16 attributes per vertex is allowed so any value between 0 and 15 will do.
-const int POSITION_ATTRIBUTE_INDEX = 12;
+const int POSITION_ATTRIBUTE_INDEX = 0;
 
 bool initialized = false;
 GLuint trianglesId;
@@ -45,6 +45,34 @@ const GLchar* fragmentShaderSource =
 "    outColor = vec4(abs(color.xy), (1.0f-abs(color.x)), 1.0f);\n"\
 "}\n";
 
+void checkShaderCompileStatus(GLuint shaderId) {
+    GLint compileStatus;
+    glGetShaderiv(shaderId, GL_COMPILE_STATUS, &compileStatus);
+    if (compileStatus == GL_FALSE) {
+        GLint infoLogLength;
+        glGetShaderiv(shaderId, GL_INFO_LOG_LENGTH, &infoLogLength);
+        printf("Shader compilation failed...\n");
+        char* log = (char*) malloc((1+infoLogLength)*sizeof(char));
+        glGetShaderInfoLog(shaderId, infoLogLength, NULL, log);
+        log[infoLogLength] = 0;
+        printf("%s", log);
+    }
+}
+
+void checkProgramLinkStatus(GLuint programId) {
+    GLint linkStatus;
+    glGetProgramiv(programId, GL_LINK_STATUS, &linkStatus);
+    if (linkStatus == GL_FALSE) {
+        GLint infoLogLength;
+        glGetProgramiv(programId, GL_INFO_LOG_LENGTH, &infoLogLength);
+        printf("Program link failed...\n");
+        char* log = (char*) malloc((1+infoLogLength)*sizeof(char));
+        glGetProgramInfoLog(programId, infoLogLength, NULL, log);
+        log[infoLogLength] = 0;
+        printf("%s", log);
+    }
+}
+
 void createProgram() {
 
 	//
@@ -54,6 +82,7 @@ void createProgram() {
     GLuint vertexShaderId = glCreateShader(GL_VERTEX_SHADER);
     glShaderSource(vertexShaderId, 1, &vertexShaderSource, &vertexShaderSourceLength);
     glCompileShader(vertexShaderId);
+    checkShaderCompileStatus(vertexShaderId);
 
 	//
 	// compile the fragment shader
@@ -62,6 +91,7 @@ void createProgram() {
     GLuint fragmentShaderId = glCreateShader(GL_FRAGMENT_SHADER);
     glShaderSource(fragmentShaderId, 1, &fragmentShaderSource, &fragmentShaderSourceLength);
     glCompileShader(fragmentShaderId);
+    checkShaderCompileStatus(fragmentShaderId);
 
 	//
 	// link the shader program
@@ -73,6 +103,7 @@ void createProgram() {
     // the variable and the attribute must be bound before the program is linked
     glBindAttribLocation(programId, POSITION_ATTRIBUTE_INDEX, "inPosition");
     glLinkProgram(programId);
+    checkProgramLinkStatus(programId);
 }
 
 void createTriangle() {
