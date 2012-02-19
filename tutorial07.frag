@@ -4,7 +4,7 @@ uniform vec4 color;
 uniform vec4 ambient;
 uniform vec3 lightDir;
 
-in vec3 normalEye;
+smooth in vec3 normalEye;
 
 out vec4 fColor;
 
