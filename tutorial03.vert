@@ -3,11 +3,11 @@
 uniform mat4 mvpMatrix;
 uniform vec4 color;
 
-in vec3 position;
-out vec4 gl_Color;
+in vec3 vpos;
+out vec4 vcolor;
 
 void main(void) 
 { 
-	gl_Position = mvpMatrix * vec4(position, 1.0f);
-	gl_Color = color;
+	gl_Position = mvpMatrix * vec4(vpos, 1.0f);
+	vcolor = color;
 }
