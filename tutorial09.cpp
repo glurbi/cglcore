@@ -388,23 +388,31 @@ void render() {
     //
     // calculate the ModelViewProjection and ModelViewProjection matrices
     //
-    matrix44 tmp, mv, mvp, frustumMat, translateMat, rotateMat1, rotateMat2;
-    frustumMat = frustum(left, right, bottom / aspectRatio, top / aspectRatio, nearPlane, farPlane);
-    translateMat = translate(0.0f, 0.0f, -3.0f);
-    rotateMat1 = rotate(1.0f * elapsed / 50, 1.0f, 0.0f, 0.0f);
-    rotateMat2 = rotate(1.0f * elapsed / 100, 0.0f, 1.0f, 0.0f);
-    tmp = rotateMat1.multm(rotateMat2);
-    mv = translateMat.multm(tmp);
-    mvp = frustumMat.multm(mv);
+    mstack mvp;
+    mstack mv;
+    
+    matrix44 frustumMat = frustum(left, right, bottom / aspectRatio, top / aspectRatio, nearPlane, farPlane);
+    matrix44 translateMat = translate(0.0f, 0.0f, -3.0f);
+    matrix44 rotateMat1 = rotate(1.0f * elapsed / 50, 1.0f, 0.0f, 0.0f);
+    matrix44 rotateMat2 = rotate(1.0f * elapsed / 100, 0.0f, 1.0f, 0.0f);
+    
+    mvp.push(frustumMat);
+    mvp.push(translateMat);
+    mvp.push(rotateMat1);
+    mvp.push(rotateMat2);
 
+    mv.push(translateMat);
+    mv.push(rotateMat1);
+    mv.push(rotateMat2);
+    
     // set the uniforms before rendering
     GLuint mvpMatrixUniform = glGetUniformLocation(programId, "mvpMatrix");
     GLuint mvMatrixUniform = glGetUniformLocation(programId, "mvMatrix");
     GLuint colorUniform = glGetUniformLocation(programId, "color");
     GLuint ambientUniform = glGetUniformLocation(programId, "ambient");
     GLuint lightDirUniform = glGetUniformLocation(programId, "lightDir");
-    glUniformMatrix4fv(mvpMatrixUniform, 1, false, mvp.f);
-    glUniformMatrix4fv(mvMatrixUniform, 1, false, mv.f);
+    glUniformMatrix4fv(mvpMatrixUniform, 1, false, mvp.top().f);
+    glUniformMatrix4fv(mvMatrixUniform, 1, false, mv.top().f);
     glUniform3f(lightDirUniform, 1.0f, -1.0f, -1.0f);
     glUniform4f(colorUniform, 0.5f, 0.5f, 0.5f, 1.0f);
     glUniform4f(ambientUniform, 0.1f, 0.1f, 0.1f, 1.0f);
