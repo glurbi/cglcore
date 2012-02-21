@@ -8,6 +8,7 @@
 #include <GL/glew.h>
 #include <GL/glxew.h>
 #include <vector>
+#include <stack>
 
 /*
  * In this tutorial, we render a rotating sphere lighted with ambient
@@ -17,13 +18,28 @@
 // C/C++ does not have a default definition for pi!
 const float pi = atan(1.0f) * 4.0f;
 
-// defines the perspective projection volume
-const float left = -1.0f;
-const float right = 1.0f;
-const float bottom = -1.0f;
-const float top = 1.0f;
-const float nearPlane = 2.0f;
-const float farPlane = 10.0f;
+inline float toRadians(float degrees) {
+    return degrees * pi / 180.0f;
+}
+
+class vector3 {
+public:
+    vector3(float x, float y, float z): x(x), y(y), z(z) {}
+    void dump(float** p) { (*p)[0] = x; (*p)[1] = y; (*p)[2] = z; *p += 3; }
+    vector3 normalize() {
+        float norm = sqrt(x*x + y*y + z*z);
+        return vector3(x / norm, y / norm, z / norm);
+    }
+    const float x, y, z;
+};
+
+vector3 midPoint(vector3 p1, vector3 p2) {
+    return vector3((p1.x + p2.x) / 2, (p1.y + p2.y) / 2, (p1.z + p2.z) / 2);
+}
+
+inline long currentTimeMillis() {
+	return clock() / (CLOCKS_PER_SEC / 1000);
+}
 
 class matrix44 {
 public:
@@ -43,17 +59,6 @@ public:
 	float f[16];
 };
 
-class vector3 {
-public:
-    vector3(float x, float y, float z): x(x), y(y), z(z) {}
-    void dump(float** p) { (*p)[0] = x; (*p)[1] = y; (*p)[2] = z; *p += 3; }
-    vector3 normalize() {
-        float norm = sqrt(x*x + y*y + z*z);
-        return vector3(x / norm, y / norm, z / norm);
-    }
-    const float x, y, z;
-};
-
 class triangle {
 public:
     triangle(vector3 p1, vector3 p2, vector3 p3): p1(p1), p2(p2), p3(p3) {}
@@ -61,82 +66,31 @@ public:
     vector3 p1, p2, p3;
 };
 
-vector3 midPoint(vector3 p1, vector3 p2) {
-    return vector3((p1.x + p2.x) / 2, (p1.y + p2.y) / 2, (p1.z + p2.z) / 2);
-}
-
-inline long currentTimeMillis() {
-	return clock() / (CLOCKS_PER_SEC / 1000);
-}
-inline float toRadians(float degrees) { return degrees * pi / 180.0f; }
-
-// determines the number iterations for
-int n = 4;
-
-inline int sphereAttributeCount(int n) { return 8 * pow(4, n) * 3; }
-
-// Up to 16 attributes per vertex is allowed so any value between 0 and 15 will do.
-const int POSITION_ATTRIBUTE_INDEX = 0;
-const int NORMAL_ATTRIBUTE_INDEX = 1;
-
-
-bool initialized = false;
-long startTimeMillis;
-GLuint programId;
-GLuint spherePositionsId;
-GLuint sphereNormalsId;
-
-float aspectRatio;
-int frameCount;
-int totalFrameCount;
-int currentWidth;
-int currentHeight;
-
-float* positions;
-
-char* readTextFile(const char* filename) {
-    struct stat st;
-    stat(filename, &st);
-    int size = st.st_size;
-    char* content = (char*) malloc((size+1)*sizeof(char));
-    content[size] = 0;
-    // we need to read as binary, not text, otherwise we are screwed on Windows
-    FILE *file = fopen(filename, "rb");
-    fread(content, 1, size, file);
-    return content;
-}
-
-void checkShaderCompileStatus(GLuint shaderId) {
-    GLint compileStatus;
-    glGetShaderiv(shaderId, GL_COMPILE_STATUS, &compileStatus);
-    if (compileStatus == GL_FALSE) {
-        GLint infoLogLength;
-        glGetShaderiv(shaderId, GL_INFO_LOG_LENGTH, &infoLogLength);
-        printf("Shader compilation failed...\n");
-        char* log = (char*) malloc((1+infoLogLength)*sizeof(char));
-        glGetShaderInfoLog(shaderId, infoLogLength, NULL, log);
-        log[infoLogLength] = 0;
-        printf("%s", log);
-    }
-}
-
-void checkProgramLinkStatus(GLuint programId) {
-    GLint linkStatus;
-    glGetProgramiv(programId, GL_LINK_STATUS, &linkStatus);
-    if (linkStatus == GL_FALSE) {
-        GLint infoLogLength;
-        glGetProgramiv(programId, GL_INFO_LOG_LENGTH, &infoLogLength);
-        printf("Program link failed...\n");
-        char* log = (char*) malloc((1+infoLogLength)*sizeof(char));
-        glGetProgramInfoLog(programId, infoLogLength, NULL, log);
-        log[infoLogLength] = 0;
-        printf("%s", log);
-    }
+matrix44 identity() {
+    matrix44 identityMatrix;
+    float* mi = identityMatrix.f;
+    mi[0] = 1.0f;
+    mi[1] = 0.0f;
+    mi[2] = 0.0f;
+    mi[3] = 0.0f;
+    mi[4] = 0.0f;
+    mi[5] = 1.0f;
+    mi[6] = 0.0f;
+    mi[7] = 0.0f;
+    mi[8] = 0.0f;
+    mi[9] = 0.0f;
+    mi[10] = 1.0;
+    mi[11] = 0.0f;
+    mi[12] = 0.0f;
+    mi[13] = 0.0f;
+    mi[14] = 0.0;
+    mi[15] = 1.0f;
+    return identityMatrix;
 }
 
 matrix44 frustum(float left, float right, float bottom, float top, float near, float far) {
-	matrix44 frustumMatrix;
-	float* m = frustumMatrix.f;
+    matrix44 frustumMatrix;
+    float* m = frustumMatrix.f;
     m[0] = 2 * near / (right - left);
     m[1] = 0.0f;
     m[2] = 0.0f;
@@ -153,7 +107,7 @@ matrix44 frustum(float left, float right, float bottom, float top, float near, f
     m[13] = 0.0f;
     m[14] = -2.0f * far * near / (far - near);
     m[15] = 0.0f;
-	return frustumMatrix;
+    return frustumMatrix;
 }
 
 matrix44 translate(float x, float y, float z) {
@@ -201,6 +155,92 @@ matrix44 rotate(float a, float x, float y, float z) {
     m[15] = 1.0f;
 	return rotateMatrix;
 }
+
+class mstack {
+public:
+    mstack() {
+        s.push(identity());
+    }
+    void push(matrix44 m) {
+        s.push(s.top().multm(m));
+    }
+    matrix44 top() {
+        return s.top();
+    }
+    std::stack<matrix44> s;
+};
+
+char* readTextFile(const char* filename) {
+    struct stat st;
+    stat(filename, &st);
+    int size = st.st_size;
+    char* content = (char*) malloc((size+1)*sizeof(char));
+    content[size] = 0;
+    // we need to read as binary, not text, otherwise we are screwed on Windows
+    FILE *file = fopen(filename, "rb");
+    fread(content, 1, size, file);
+    return content;
+}
+
+// defines the perspective projection volume
+const float left = -1.0f;
+const float right = 1.0f;
+const float bottom = -1.0f;
+const float top = 1.0f;
+const float nearPlane = 2.0f;
+const float farPlane = 10.0f;
+
+// determines the number iterations for
+int n = 4;
+
+inline int sphereAttributeCount(int n) { return 8 * pow(4, n) * 3; }
+
+// Up to 16 attributes per vertex is allowed so any value between 0 and 15 will do.
+const int POSITION_ATTRIBUTE_INDEX = 0;
+const int NORMAL_ATTRIBUTE_INDEX = 1;
+
+bool initialized = false;
+long startTimeMillis;
+GLuint programId;
+GLuint spherePositionsId;
+GLuint sphereNormalsId;
+
+float aspectRatio;
+int frameCount;
+int totalFrameCount;
+int currentWidth;
+int currentHeight;
+
+float* positions;
+
+void checkShaderCompileStatus(GLuint shaderId) {
+    GLint compileStatus;
+    glGetShaderiv(shaderId, GL_COMPILE_STATUS, &compileStatus);
+    if (compileStatus == GL_FALSE) {
+        GLint infoLogLength;
+        glGetShaderiv(shaderId, GL_INFO_LOG_LENGTH, &infoLogLength);
+        printf("Shader compilation failed...\n");
+        char* log = (char*) malloc((1+infoLogLength)*sizeof(char));
+        glGetShaderInfoLog(shaderId, infoLogLength, NULL, log);
+        log[infoLogLength] = 0;
+        printf("%s", log);
+    }
+}
+
+void checkProgramLinkStatus(GLuint programId) {
+    GLint linkStatus;
+    glGetProgramiv(programId, GL_LINK_STATUS, &linkStatus);
+    if (linkStatus == GL_FALSE) {
+        GLint infoLogLength;
+        glGetProgramiv(programId, GL_INFO_LOG_LENGTH, &infoLogLength);
+        printf("Program link failed...\n");
+        char* log = (char*) malloc((1+infoLogLength)*sizeof(char));
+        glGetProgramInfoLog(programId, infoLogLength, NULL, log);
+        log[infoLogLength] = 0;
+        printf("%s", log);
+    }
+}
+
 
 void refine(int depth, triangle t, float** p) {
     if (depth == n) {
@@ -302,7 +342,7 @@ void reshape(int width, int height) {
 // thanks to http://openglbook.com/the-book/chapter-1-getting-started/#toc-measuring-performance
 void timer(int value) {
     char title[512];
-    sprintf(title, "Tutorial08: %d FPS @ %d x %d", frameCount * 4, currentWidth, currentHeight);
+    sprintf(title, "Tutorial09: %d FPS @ %d x %d", frameCount * 4, currentWidth, currentHeight);
     SDL_WM_SetCaption(title, title);
     frameCount = 0;
 }
