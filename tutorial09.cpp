@@ -182,6 +182,109 @@ char* readTextFile(const char* filename) {
     return content;
 }
 
+// Up to 16 attributes per vertex is allowed so any value between 0 and 15 will do.
+const int POSITION_ATTRIBUTE_INDEX = 0;
+const int NORMAL_ATTRIBUTE_INDEX = 1;
+
+
+// a class for calculating the vertices and drawing a sphere
+class Sphere {
+
+public:
+    
+    void init() {
+        float* positions;
+        int nfloats = sphereAttributeCount(n)*3; // number of floats in the buffer
+        int bufferSize = nfloats*sizeof(float);
+        positions = (float*) malloc(bufferSize);
+        spherePositionsId = createSpherePositions(positions, nfloats);
+        sphereNormalsId = createSphereNormals(positions, nfloats);
+        free(positions);
+    }
+    
+    void render() {
+        glEnableVertexAttribArray(POSITION_ATTRIBUTE_INDEX);
+        glBindBuffer(GL_ARRAY_BUFFER, spherePositionsId);
+        glVertexAttribPointer(POSITION_ATTRIBUTE_INDEX, 3, GL_FLOAT, GL_FALSE, 0, 0);
+        glEnableVertexAttribArray(NORMAL_ATTRIBUTE_INDEX);
+        glBindBuffer(GL_ARRAY_BUFFER, sphereNormalsId);
+        glVertexAttribPointer(NORMAL_ATTRIBUTE_INDEX, 3, GL_FLOAT, GL_FALSE, 0, 0);
+        glDrawArrays(GL_TRIANGLES, 0, sphereAttributeCount(n));
+        glDisableVertexAttribArray(POSITION_ATTRIBUTE_INDEX);
+        glDisableVertexAttribArray(NORMAL_ATTRIBUTE_INDEX);
+        glBindBuffer(GL_ARRAY_BUFFER, 0);
+    }
+    
+private:
+
+    GLuint spherePositionsId;
+    GLuint sphereNormalsId;
+    
+    static const int n = 4;
+
+    inline int sphereAttributeCount(int n) { return 8 * pow(4, n) * 3; }
+
+    void refine(int depth, triangle t, float** p) {
+        if (depth == n) {
+            t.dump(p);
+        } else {
+            vector3 m1 = midPoint(t.p2, t.p3).normalize();
+            vector3 m2 = midPoint(t.p3, t.p1).normalize();
+            vector3 m3 = midPoint(t.p1, t.p2).normalize();
+            refine(depth + 1, triangle(t.p1, m3, m2), p);
+            refine(depth + 1, triangle(m3, t.p2, m1), p);
+            refine(depth + 1, triangle(m1, m2, m3), p);
+            refine(depth + 1, triangle(m2, m1, t.p3), p);
+        }
+    }
+
+    GLuint createSpherePositions(float* positions, int nfloats) {
+        float* p = positions;
+        GLuint spherePositionsId;
+
+        //
+        // we refine each side of an octahedron
+        // cf http://paulbourke.net/miscellaneous/sphere_cylinder/
+        //
+        refine(0, triangle(vector3(0.0f, 1.0f, 0.0f), vector3(0.0f, 0.0f, 1.0f), vector3(1.0f, 0.0f, 0.0f)), &p);
+        refine(0, triangle(vector3(0.0f, 1.0f, 0.0f), vector3(1.0f, 0.0f, 0.0f), vector3(0.0f, 0.0f, -1.0f)), &p);
+        refine(0, triangle(vector3(0.0f, 1.0f, 0.0f), vector3(0.0f, 0.0f, -1.0f), vector3(-1.0f, 0.0f, 0.0f)), &p);
+        refine(0, triangle(vector3(0.0f, 1.0f, 0.0f), vector3(-1.0f, 0.0f, 0.0f), vector3(0.0f, 0.0f, 1.0f)), &p);
+        refine(0, triangle(vector3(0.0f, -1.0f, 0.0f), vector3(1.0f, 0.0f, 0.0f), vector3(0.0f, 0.0f, 1.0f)), &p);
+        refine(0, triangle(vector3(0.0f, -1.0f, 0.0f), vector3(0.0f, 0.0f, 1.0f), vector3(-1.0f, 0.0f, 0.0f)), &p);
+        refine(0, triangle(vector3(0.0f, -1.0f, 0.0f), vector3(-1.0f, 0.0f, 0.0f), vector3(0.0f, 0.0f, -1.0f)), &p);
+        refine(0, triangle(vector3(0.0f, -1.0f, 0.0f), vector3(0.0f, 0.0f, -1.0f), vector3(1.0f, 0.0f, 0.0f)), &p);
+
+        glGenBuffers(1, &spherePositionsId);
+        glBindBuffer(GL_ARRAY_BUFFER, spherePositionsId);
+        glBufferData(GL_ARRAY_BUFFER, nfloats*sizeof(float), positions, GL_STATIC_DRAW);
+        return spherePositionsId;
+    }
+
+    GLuint createSphereNormals(float* positions, int nfloats) {
+        int bufferSize = nfloats*sizeof(float);
+        float* normals = (float*) malloc(bufferSize);
+        float* n = normals;
+        float* p = positions;
+        GLuint sphereNormalsId;
+
+        for (int i = 0; i < nfloats; i+=9) {
+            float nx = (p[i+0] + p[i+3] + p[i+6]) / 3;
+            float ny = (p[i+1] + p[i+4] + p[i+7]) / 3;
+            float nz = (p[i+2] + p[i+5] + p[i+8]) / 3;
+            n[i+0] = n[i+3] = n[i+6] = nx;
+            n[i+1] = n[i+4] = n[i+7] = ny;
+            n[i+2] = n[i+5] = n[i+8] = nz;
+        }
+
+        glGenBuffers(1, &sphereNormalsId);
+        glBindBuffer(GL_ARRAY_BUFFER, sphereNormalsId);
+        glBufferData(GL_ARRAY_BUFFER, nfloats*sizeof(float), normals, GL_STATIC_DRAW);
+        free(normals);
+        return sphereNormalsId;
+    }
+};
+
 // defines the perspective projection volume
 const float left = -1.0f;
 const float right = 1.0f;
@@ -190,28 +293,16 @@ const float top = 1.0f;
 const float nearPlane = 2.0f;
 const float farPlane = 10.0f;
 
-// determines the number iterations for
-int n = 4;
-
-inline int sphereAttributeCount(int n) { return 8 * pow(4, n) * 3; }
-
-// Up to 16 attributes per vertex is allowed so any value between 0 and 15 will do.
-const int POSITION_ATTRIBUTE_INDEX = 0;
-const int NORMAL_ATTRIBUTE_INDEX = 1;
-
 bool initialized = false;
 long startTimeMillis;
 GLuint programId;
-GLuint spherePositionsId;
-GLuint sphereNormalsId;
+Sphere sphere;
 
 float aspectRatio;
 int frameCount;
 int totalFrameCount;
 int currentWidth;
 int currentHeight;
-
-float* positions;
 
 void checkShaderCompileStatus(GLuint shaderId) {
     GLint compileStatus;
@@ -239,72 +330,6 @@ void checkProgramLinkStatus(GLuint programId) {
         log[infoLogLength] = 0;
         printf("%s", log);
     }
-}
-
-
-void refine(int depth, triangle t, float** p) {
-    if (depth == n) {
-        t.dump(p);
-    } else {
-        vector3 m1 = midPoint(t.p2, t.p3).normalize();
-        vector3 m2 = midPoint(t.p3, t.p1).normalize();
-        vector3 m3 = midPoint(t.p1, t.p2).normalize();
-        refine(depth + 1, triangle(t.p1, m3, m2), p);
-        refine(depth + 1, triangle(m3, t.p2, m1), p);
-        refine(depth + 1, triangle(m1, m2, m3), p);
-        refine(depth + 1, triangle(m2, m1, t.p3), p);
-    }
-}
-
-GLuint createSpherePositions() {
-    int nfloats = sphereAttributeCount(n)*3; // number of floats in the buffer
-    int bufferSize = nfloats*sizeof(float);
-    positions = (float*) malloc(bufferSize);
-    float* p = positions;
-    GLuint spherePositionsId;
-
-    //
-    // we refine each side of an octahedron
-    // cf http://paulbourke.net/miscellaneous/sphere_cylinder/
-    //
-    refine(0, triangle(vector3(0.0f, 1.0f, 0.0f), vector3(0.0f, 0.0f, 1.0f), vector3(1.0f, 0.0f, 0.0f)), &p);
-    refine(0, triangle(vector3(0.0f, 1.0f, 0.0f), vector3(1.0f, 0.0f, 0.0f), vector3(0.0f, 0.0f, -1.0f)), &p);
-    refine(0, triangle(vector3(0.0f, 1.0f, 0.0f), vector3(0.0f, 0.0f, -1.0f), vector3(-1.0f, 0.0f, 0.0f)), &p);
-    refine(0, triangle(vector3(0.0f, 1.0f, 0.0f), vector3(-1.0f, 0.0f, 0.0f), vector3(0.0f, 0.0f, 1.0f)), &p);
-    refine(0, triangle(vector3(0.0f, -1.0f, 0.0f), vector3(1.0f, 0.0f, 0.0f), vector3(0.0f, 0.0f, 1.0f)), &p);
-    refine(0, triangle(vector3(0.0f, -1.0f, 0.0f), vector3(0.0f, 0.0f, 1.0f), vector3(-1.0f, 0.0f, 0.0f)), &p);
-    refine(0, triangle(vector3(0.0f, -1.0f, 0.0f), vector3(-1.0f, 0.0f, 0.0f), vector3(0.0f, 0.0f, -1.0f)), &p);
-    refine(0, triangle(vector3(0.0f, -1.0f, 0.0f), vector3(0.0f, 0.0f, -1.0f), vector3(1.0f, 0.0f, 0.0f)), &p);
-
-    glGenBuffers(1, &spherePositionsId);
-    glBindBuffer(GL_ARRAY_BUFFER, spherePositionsId);
-    glBufferData(GL_ARRAY_BUFFER, nfloats*sizeof(float), positions, GL_STATIC_DRAW);
-    //free(positions);
-    return spherePositionsId;
-}
-
-GLuint createSphereNormals(float* positions) {
-    int nfloats = sphereAttributeCount(n)*3; // number of floats in the buffer
-    int bufferSize = nfloats*sizeof(float);
-    float* normals = (float*) malloc(bufferSize);
-    float* n = normals;
-    float* p = positions;
-    GLuint sphereNormalsId;
-
-    for (int i = 0; i < nfloats; i+=9) {
-        float nx = (p[i+0] + p[i+3] + p[i+6]) / 3;
-        float ny = (p[i+1] + p[i+4] + p[i+7]) / 3;
-        float nz = (p[i+2] + p[i+5] + p[i+8]) / 3;
-        n[i+0] = n[i+3] = n[i+6] = nx;
-        n[i+1] = n[i+4] = n[i+7] = ny;
-        n[i+2] = n[i+5] = n[i+8] = nz;
-    }
-
-    glGenBuffers(1, &sphereNormalsId);
-    glBindBuffer(GL_ARRAY_BUFFER, sphereNormalsId);
-    glBufferData(GL_ARRAY_BUFFER, nfloats*sizeof(float), normals, GL_STATIC_DRAW);
-    free(normals);
-    return sphereNormalsId;
 }
 
 void createProgram() {
@@ -347,26 +372,12 @@ void timer(int value) {
     frameCount = 0;
 }
 
-void renderSphere() {
-    glEnableVertexAttribArray(POSITION_ATTRIBUTE_INDEX);
-    glBindBuffer(GL_ARRAY_BUFFER, spherePositionsId);
-    glVertexAttribPointer(POSITION_ATTRIBUTE_INDEX, 3, GL_FLOAT, GL_FALSE, 0, 0);
-    glEnableVertexAttribArray(NORMAL_ATTRIBUTE_INDEX);
-    glBindBuffer(GL_ARRAY_BUFFER, sphereNormalsId);
-    glVertexAttribPointer(NORMAL_ATTRIBUTE_INDEX, 3, GL_FLOAT, GL_FALSE, 0, 0);
-    glDrawArrays(GL_TRIANGLES, 0, sphereAttributeCount(n));
-    glDisableVertexAttribArray(POSITION_ATTRIBUTE_INDEX);
-    glDisableVertexAttribArray(NORMAL_ATTRIBUTE_INDEX);
-    glBindBuffer(GL_ARRAY_BUFFER, 0);
-}
-
 void render() {
 
     if (initialized == false) {
         glEnable(GL_CULL_FACE);
         glEnable(GL_DEPTH_TEST);
-        spherePositionsId = createSpherePositions();
-        sphereNormalsId = createSphereNormals(positions);
+        sphere.init();
         createProgram();
         startTimeMillis = currentTimeMillis();
         initialized = true;
@@ -418,7 +429,7 @@ void render() {
     glUniform4f(ambientUniform, 0.1f, 0.1f, 0.1f, 1.0f);
 
     // render!
-    renderSphere();
+    sphere.render();
 
     // display rendering buffer
     SDL_GL_SwapBuffers();
