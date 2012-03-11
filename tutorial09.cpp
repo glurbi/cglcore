@@ -1,14 +1,15 @@
 #include <sys/stat.h>
 #include <stdlib.h>
 #include <stdio.h>
-#include <string.h>
 #include <time.h>
 #include <math.h>
 #include <SDL/SDL.h>
+#include <SDL/SDL_image.h>
 #include <GL/glew.h>
 #include <GL/glxew.h>
 #include <vector>
 #include <stack>
+#include <string>
 
 /*
  * In this tutorial, we render a rotating sphere lighted with ambient
@@ -185,7 +186,42 @@ char* readTextFile(const char* filename) {
 // Up to 16 attributes per vertex is allowed so any value between 0 and 15 will do.
 const int POSITION_ATTRIBUTE_INDEX = 0;
 const int NORMAL_ATTRIBUTE_INDEX = 1;
+const int TEXCOORD_ATTRIBUTE_INDEX = 2;
 
+// a class for managing a texture
+class Texture {
+
+public:
+
+    Texture(const std::string& s) {
+        imageFile = s;
+    }
+
+    void init() {
+        SDL_Surface *image = IMG_Load(imageFile.c_str());
+        if(!image) {
+            printf("IMG_Load: %s\n", IMG_GetError());
+        }
+        int width = image->w;
+        int height = image->h;
+        SDL_Surface* rgbaImage = SDL_CreateRGBSurface(0, width, height, 32, 0xff000000, 0x00ff0000, 0x0000ff00, 0x000000ff);
+        SDL_BlitSurface(image, 0, rgbaImage, 0);
+        GLenum format = GL_RGBA;
+        
+        glGenTextures(1, &textureId);
+        glBindTexture(GL_TEXTURE_2D, textureId);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+        glTexImage2D(GL_TEXTURE_2D, 0, format, width, height, 0, format, GL_UNSIGNED_BYTE, rgbaImage->pixels);
+    }
+
+private:
+
+    std::string imageFile;
+    GLuint textureId;
+};
 
 // a class for calculating the vertices and drawing a sphere
 class Sphere {
@@ -296,6 +332,8 @@ const float farPlane = 10.0f;
 bool initialized = false;
 long startTimeMillis;
 GLuint programId;
+Texture textureDay("earth_day.jpg");
+Texture textureNight("earth_night.jpg");
 Sphere sphere;
 
 float aspectRatio;
@@ -333,14 +371,14 @@ void checkProgramLinkStatus(GLuint programId) {
 }
 
 void createProgram() {
-    const GLchar* vertexShaderSource = readTextFile("tutorial08.vert");
+    const GLchar* vertexShaderSource = readTextFile("tutorial09.vert");
     int vertexShaderSourceLength = strlen(vertexShaderSource);
     GLuint vertexShaderId = glCreateShader(GL_VERTEX_SHADER);
     glShaderSource(vertexShaderId, 1, &vertexShaderSource, &vertexShaderSourceLength);
     glCompileShader(vertexShaderId);
 	checkShaderCompileStatus(vertexShaderId);
 
-    const GLchar* fragmentShaderSource = readTextFile("tutorial08.frag");
+    const GLchar* fragmentShaderSource = readTextFile("tutorial09.frag");
     int fragmentShaderSourceLength = strlen(fragmentShaderSource);
     GLuint fragmentShaderId = glCreateShader(GL_FRAGMENT_SHADER);
     glShaderSource(fragmentShaderId, 1, &fragmentShaderSource, &fragmentShaderSourceLength);

@@ -37,7 +37,7 @@ tutorial08: tutorial08.cpp
 	g++ -Wall -g -std=c++0x -o tutorial08 tutorial08.cpp -lX11 -lGL -lGLEW -lSDL
 	
 tutorial09: tutorial09.cpp
-	g++ -Wall -g -std=c++0x -o tutorial09 tutorial09.cpp -lX11 -lGL -lGLEW -lSDL
+	g++ -Wall -g -std=c++0x -o tutorial09 tutorial09.cpp -lX11 -lGL -lGLEW -lSDL -lSDL_image
 
 clean:
 	-rm $(EXECUTABLES)
