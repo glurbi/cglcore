@@ -217,6 +217,10 @@ public:
         glTexImage2D(GL_TEXTURE_2D, 0, format, width, height, 0, format, GL_UNSIGNED_BYTE, rgbaImage->pixels);
     }
 
+    GLuint getId() {
+        return textureId;
+    }
+
 private:
 
     std::string imageFile;
@@ -235,6 +239,7 @@ public:
         positions = (float*) malloc(bufferSize);
         spherePositionsId = createSpherePositions(positions, nfloats);
         sphereNormalsId = createSphereNormals(positions, nfloats);
+        sphereTexCoordsId = createSphereTexCoords(positions, nfloats);
         free(positions);
     }
     
@@ -245,9 +250,13 @@ public:
         glEnableVertexAttribArray(NORMAL_ATTRIBUTE_INDEX);
         glBindBuffer(GL_ARRAY_BUFFER, sphereNormalsId);
         glVertexAttribPointer(NORMAL_ATTRIBUTE_INDEX, 3, GL_FLOAT, GL_FALSE, 0, 0);
+        glEnableVertexAttribArray(TEXCOORD_ATTRIBUTE_INDEX);
+        glBindBuffer(GL_ARRAY_BUFFER, sphereTexCoordsId);
+        glVertexAttribPointer(TEXCOORD_ATTRIBUTE_INDEX, 2, GL_FLOAT, GL_FALSE, 0, 0);        
         glDrawArrays(GL_TRIANGLES, 0, sphereAttributeCount(n));
         glDisableVertexAttribArray(POSITION_ATTRIBUTE_INDEX);
         glDisableVertexAttribArray(NORMAL_ATTRIBUTE_INDEX);
+        glDisableVertexAttribArray(TEXCOORD_ATTRIBUTE_INDEX);
         glBindBuffer(GL_ARRAY_BUFFER, 0);
     }
     
@@ -255,6 +264,7 @@ private:
 
     GLuint spherePositionsId;
     GLuint sphereNormalsId;
+    GLuint sphereTexCoordsId;
     
     static const int n = 4;
 
@@ -319,6 +329,34 @@ private:
         free(normals);
         return sphereNormalsId;
     }
+    
+    GLuint createSphereTexCoords(float* positions, int nfloats) {
+        int ntex = sphereAttributeCount(n)*2;
+        int bufferSize = ntex*sizeof(float);
+        float* texCoords = (float*) malloc(bufferSize);
+        float* t = texCoords;
+        float* p = positions;
+        GLuint texCoordsId;
+        
+        for (int i = 0; i < nfloats; i+=3) {
+            float x = p[i+0];
+            float y = p[i+1];
+            float z = p[i+2];
+            float lat = acos(z);
+            float lon = atan2(y, x);
+            *t = lon / (2*pi) + 0.5f;
+            t++;
+            *t = lat / pi + 0.5f;
+            t++;
+        }
+
+        glGenBuffers(1, &texCoordsId);
+        glBindBuffer(GL_ARRAY_BUFFER, texCoordsId);
+        glBufferData(GL_ARRAY_BUFFER, ntex*sizeof(float), texCoords, GL_STATIC_DRAW);
+        free(texCoords);
+        return texCoordsId;
+    }
+    
 };
 
 // defines the perspective projection volume
@@ -413,9 +451,12 @@ void timer(int value) {
 void render() {
 
     if (initialized == false) {
+        glEnable(GL_TEXTURE_2D);    
         glEnable(GL_CULL_FACE);
         glEnable(GL_DEPTH_TEST);
         sphere.init();
+        textureDay.init();
+        textureNight.init();
         createProgram();
         startTimeMillis = currentTimeMillis();
         initialized = true;
@@ -454,10 +495,15 @@ void render() {
     mv.push(rotateMat1);
     mv.push(rotateMat2);
     
+    // activate the texture
+    glBindTexture(GL_TEXTURE_2D, textureDay.getId());
+    glActiveTexture(GL_TEXTURE0);
+    
     // set the uniforms before rendering
     GLuint mvpMatrixUniform = glGetUniformLocation(programId, "mvpMatrix");
     GLuint mvMatrixUniform = glGetUniformLocation(programId, "mvMatrix");
     GLuint colorUniform = glGetUniformLocation(programId, "color");
+    GLuint textureUniform = glGetUniformLocation(programId, "texture");    
     GLuint ambientUniform = glGetUniformLocation(programId, "ambient");
     GLuint lightDirUniform = glGetUniformLocation(programId, "lightDir");
     glUniformMatrix4fv(mvpMatrixUniform, 1, false, mvp.top().f);
@@ -465,6 +511,7 @@ void render() {
     glUniform3f(lightDirUniform, 1.0f, -1.0f, -1.0f);
     glUniform4f(colorUniform, 0.5f, 0.5f, 0.5f, 1.0f);
     glUniform4f(ambientUniform, 0.1f, 0.1f, 0.1f, 1.0f);
+    glUniform1i(textureUniform, 0);
 
     // render!
     sphere.render();

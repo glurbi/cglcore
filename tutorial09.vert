@@ -5,11 +5,14 @@ uniform mat4 mvMatrix;
 uniform vec4 color;
 uniform vec4 ambient;
 uniform vec3 lightDir;
+uniform sampler2D texture;
 
 in vec3 vPosition;
 in vec3 vNormal;
+in vec2 vTexCoord;
 
 flat out vec4 vColor;
+out vec2 texcoord;
 
 void main(void) 
 { 
@@ -26,6 +29,7 @@ void main(void)
     float specFactor = pow(max(0.0f, dot(normalEye, reflection)), 128.0f);
     vec4 specular = specFactor * vec4(1.0f, 1.0f, 1.0f, 1.0f);
     
+    texcoord = vTexCoord;
     vColor =  ambient + diffuse + specular;
     gl_Position = mvpMatrix * vec4(vPosition, 1.0f);
 }
