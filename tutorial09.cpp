@@ -204,7 +204,7 @@ public:
         }
         int width = image->w;
         int height = image->h;
-        SDL_Surface* rgbaImage = SDL_CreateRGBSurface(0, width, height, 32, 0xff000000, 0x00ff0000, 0x0000ff00, 0x000000ff);
+        SDL_Surface* rgbaImage = SDL_CreateRGBSurface(0, width, height, 32, 0x000000ff, 0x0000ff00, 0x00ff0000, 0xff000000);
         SDL_BlitSurface(image, 0, rgbaImage, 0);
         GLenum format = GL_RGBA;
         
@@ -339,10 +339,10 @@ private:
         GLuint texCoordsId;
         
         for (int i = 0; i < nfloats; i+=3) {
-            float x = p[i+0];
-            float y = p[i+1];
-            float z = p[i+2];
-            float lat = acos(z);
+            float x = p[i+2];
+            float y = p[i+0];
+            float z = p[i+1];
+            float lat = asin(z);
             float lon = atan2(y, x);
             *t = lon / (2*pi) + 0.5f;
             t++;
@@ -485,15 +485,15 @@ void render() {
     matrix44 translateMat = translate(0.0f, 0.0f, -3.0f);
     matrix44 rotateMat1 = rotate(1.0f * elapsed / 50, 1.0f, 0.0f, 0.0f);
     matrix44 rotateMat2 = rotate(1.0f * elapsed / 100, 0.0f, 1.0f, 0.0f);
-    
+
     mvp.push(frustumMat);
     mvp.push(translateMat);
     mvp.push(rotateMat1);
     mvp.push(rotateMat2);
 
     mv.push(translateMat);
-    mv.push(rotateMat1);
-    mv.push(rotateMat2);
+    mvp.push(rotateMat1);
+    mvp.push(rotateMat2);
     
     // activate the texture
     glBindTexture(GL_TEXTURE_2D, textureDay.getId());
