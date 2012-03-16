@@ -12,25 +12,14 @@ in vec3 vPosition;
 in vec3 vNormal;
 in vec2 vTexCoord;
 
-flat out vec4 vColor;
+out float dotProduct;
 out vec2 texcoord;
 
 void main(void) 
 { 
-    /* We transform the normal in eye coordinates. */
     vec3 normalEye = vec3(mvMatrix * vec4(vNormal, 0.0f));
-    
-    /* We compute the dot product of the normal in eye coordinates by the light direction.
-       The value will be positive when the diffuse light should be ignored, negative otherwise. */
-    float dotProduct = dot(normalEye, lightDir);
-    vec4 diffuse = color * max(-dotProduct, 0.0f);
-
-    /* We compute the reflection to get the specular component */
-    vec3 reflection = normalize(reflect(lightDir, normalEye));
-    float specFactor = pow(max(0.0f, dot(normalEye, reflection)), 128.0f);
-    vec4 specular = specFactor * vec4(1.0f, 1.0f, 1.0f, 1.0f);
+    dotProduct = dot(normalEye, lightDir);
     
     texcoord = vTexCoord;
-    vColor =  ambient + diffuse + specular;
     gl_Position = mvpMatrix * vec4(vPosition, 1.0f);
 }
