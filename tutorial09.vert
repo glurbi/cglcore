@@ -5,7 +5,8 @@ uniform mat4 mvMatrix;
 uniform vec4 color;
 uniform vec4 ambient;
 uniform vec3 lightDir;
-uniform sampler2D texture;
+uniform sampler2D textureDay;
+uniform sampler2D textureNight;
 
 in vec3 vPosition;
 in vec3 vNormal;

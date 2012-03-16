@@ -210,8 +210,8 @@ public:
         
         glGenTextures(1, &textureId);
         glBindTexture(GL_TEXTURE_2D, textureId);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
         glTexImage2D(GL_TEXTURE_2D, 0, format, width, height, 0, format, GL_UNSIGNED_BYTE, rgbaImage->pixels);
@@ -496,14 +496,17 @@ void render() {
     mvp.push(rotateMat2);
     
     // activate the texture
-    glBindTexture(GL_TEXTURE_2D, textureDay.getId());
     glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_2D, textureDay.getId());
+    glActiveTexture(GL_TEXTURE1);
+    glBindTexture(GL_TEXTURE_2D, textureNight.getId());
     
     // set the uniforms before rendering
     GLuint mvpMatrixUniform = glGetUniformLocation(programId, "mvpMatrix");
     GLuint mvMatrixUniform = glGetUniformLocation(programId, "mvMatrix");
     GLuint colorUniform = glGetUniformLocation(programId, "color");
-    GLuint textureUniform = glGetUniformLocation(programId, "texture");    
+    GLuint textureDayUniform = glGetUniformLocation(programId, "textureDay");
+    GLuint textureNightUniform = glGetUniformLocation(programId, "textureNight");
     GLuint ambientUniform = glGetUniformLocation(programId, "ambient");
     GLuint lightDirUniform = glGetUniformLocation(programId, "lightDir");
     glUniformMatrix4fv(mvpMatrixUniform, 1, false, mvp.top().f);
@@ -511,7 +514,8 @@ void render() {
     glUniform3f(lightDirUniform, 1.0f, -1.0f, -1.0f);
     glUniform4f(colorUniform, 0.5f, 0.5f, 0.5f, 1.0f);
     glUniform4f(ambientUniform, 0.1f, 0.1f, 0.1f, 1.0f);
-    glUniform1i(textureUniform, 0);
+    glUniform1i(textureDayUniform, 0);
+    glUniform1i(textureNightUniform, 1);
 
     // render!
     sphere.render();
