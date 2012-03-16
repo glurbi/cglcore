@@ -3,8 +3,8 @@
 uniform sampler2D textureDay;
 uniform sampler2D textureNight;
 
-in float dotProduct;
-in vec2 texcoord;
+smooth in float dotProduct;
+smooth in vec2 texcoord;
 
 out vec4 fColor;
 

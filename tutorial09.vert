@@ -12,8 +12,8 @@ in vec3 vPosition;
 in vec3 vNormal;
 in vec2 vTexCoord;
 
-out float dotProduct;
-out vec2 texcoord;
+smooth out float dotProduct;
+smooth out vec2 texcoord;
 
 void main(void) 
 { 
