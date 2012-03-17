@@ -10,8 +10,9 @@ out vec4 fColor;
 
 void main(void) 
 {
-    float f = dotProduct / 2 + 0.5f;
-    vec4 texColorDay = texture2D(textureDay, texcoord) * f;
-    vec4 texColorNight = texture2D(textureNight, texcoord) * (1 - f);
-    fColor = texColorDay + texColorNight;
+    float fDay = clamp(dotProduct + 0.9f, 0.0f, 1.0f);
+    float fNight = clamp(abs(dotProduct - 0.9f), 0.0f, 1.0f);
+    vec4 texColorDay = texture2D(textureDay, texcoord);
+    vec4 texColorNight = texture2D(textureNight, texcoord);
+    fColor = texColorDay * fDay + texColorNight * fNight;
 }
