@@ -23,6 +23,12 @@ inline float toRadians(float degrees) {
     return degrees * pi / 180.0f;
 }
 
+class vector2 {
+public:
+    vector2(float x, float y): x(x), y(y) {}
+    const float x, y;
+};
+
 class vector3 {
 public:
     vector3(float x, float y, float z): x(x), y(y), z(z) {}
@@ -64,6 +70,7 @@ class triangle {
 public:
     triangle(vector3 p1, vector3 p2, vector3 p3): p1(p1), p2(p2), p3(p3) {}
     void dump(float** p) { p1.dump(p); p2.dump(p); p3.dump(p); }
+    vector3 center() { return vector3((p1.x+p2.x+p3.x)/3, (p1.y+p2.y+p3.y)/3, (p1.z+p2.z+p3.z)/3); }
     vector3 p1, p2, p3;
 };
 
@@ -291,11 +298,17 @@ private:
 
     inline int sphereAttributeCount(int n) { return 8 * pow(4, n) * 3; }
 
-    void texCoord(float** t, vector3 p) {
-        float lat = asin(p.z);
-        float lon = atan2(p.y, p.x);
+    inline vector2 cart2geog(vector3 p) { return vector2(atan2(p.y, p.x), asin(p.z)); }
+
+    void texCoord(float** t, vector3 p, triangle tr) {
+        vector2 geog = cart2geog(p);
+        vector2 geogtr = cart2geog(tr.center());
+        float lat = geog.y;
+        float lon = geog.x;
         float t1 = lon / (2.0f*pi) + 0.5f;
         float t2 = -1.0f * lat / pi + 0.5f;
+        if (t1 == 1.0f && geogtr.x < 0.5f) { t1 = 0.0f; }
+        if (t1 == 0.0f && geogtr.x > 0.5f) { t1 = 1.0f; }       
         **t = t1;
         (*t)++;
         **t = t2;
@@ -306,9 +319,9 @@ private:
         if (d == depth) {
             tr.dump(p);
             tr.dump(n);
-            texCoord(t, tr.p1);
-            texCoord(t, tr.p2);
-            texCoord(t, tr.p3);
+            texCoord(t, tr.p1, tr);
+            texCoord(t, tr.p2, tr);
+            texCoord(t, tr.p3, tr);
         } else {
             vector3 m1 = midPoint(tr.p2, tr.p3).normalize();
             vector3 m2 = midPoint(tr.p3, tr.p1).normalize();
