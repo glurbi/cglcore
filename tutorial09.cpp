@@ -12,8 +12,8 @@
 #include <string>
 
 /*
- * In this tutorial, we render a rotating sphere lighted with ambient
- * and diffuse light component, using gouraud lighting and flat shading.
+ * In this tutorial, we render a rotating sphere which combines 2 textures:
+ * one for the earth under day light, the other for the earth under night lighting.
  */
 
 // C/C++ does not have a default definition for pi!

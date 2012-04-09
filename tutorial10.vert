@@ -1,12 +1,9 @@
 #version 330 core
 
 uniform mat4 mvpMatrix;
-uniform mat4 mvMatrix;
-uniform vec4 color;
-uniform vec4 ambient;
-uniform vec3 lightDir;
 uniform sampler2D textureEarth;
 uniform sampler2D textureCloud;
+uniform float threshold;
 
 in vec3 vPosition;
 in vec2 vTexCoord;

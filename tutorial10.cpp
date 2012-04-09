@@ -12,8 +12,7 @@
 #include <string>
 
 /*
- * In this tutorial, we render a rotating sphere lighted with ambient
- * and diffuse light component, using gouraud lighting and flat shading.
+ * In this tutorial, we render a rotating textured sphere which fades away and reappears.
  */
 
 // C/C++ does not have a default definition for pi!
@@ -454,7 +453,6 @@ void render() {
     // calculate the ModelViewProjection and ModelViewProjection matrices
     //
     mstack mvp;
-    mstack mv;
     
     matrix44 frustumMat = frustum(left, right, bottom / aspectRatio, top / aspectRatio, nearPlane, farPlane);
     matrix44 translateMat = translate(0.0f, 0.0f, -3.0f);
@@ -468,11 +466,6 @@ void render() {
     mvp.push(rotateMat2);
     mvp.push(rotateMat3);
 
-    mv.push(translateMat);
-    mv.push(rotateMat1);
-    mv.push(rotateMat2);
-    mv.push(rotateMat3);
-    
     // activate the textures
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, textureEarth.getId());
@@ -481,15 +474,11 @@ void render() {
     
     // set the uniforms before rendering
     GLuint mvpMatrixUniform = glGetUniformLocation(programId, "mvpMatrix");
-    GLuint mvMatrixUniform = glGetUniformLocation(programId, "mvMatrix");
     GLuint textureEarthUniform = glGetUniformLocation(programId, "textureEarth");
     GLuint textureCloudUniform = glGetUniformLocation(programId, "textureCloud");
-    GLuint ambientUniform = glGetUniformLocation(programId, "ambient");
-    GLuint lightDirUniform = glGetUniformLocation(programId, "lightDir");
+    GLuint thresholdUniform = glGetUniformLocation(programId, "threshold");
     glUniformMatrix4fv(mvpMatrixUniform, 1, false, mvp.top().f);
-    glUniformMatrix4fv(mvMatrixUniform, 1, false, mv.top().f);
-    glUniform3f(lightDirUniform, 1.0f, 0.0f, -0.5f);
-    glUniform4f(ambientUniform, 0.1f, 0.1f, 0.1f, 1.0f);
+    glUniform1f(thresholdUniform, sin(0.001*elapsed)/2 + 0.5);
     glUniform1i(textureEarthUniform, 0);
     glUniform1i(textureCloudUniform, 1);
 
